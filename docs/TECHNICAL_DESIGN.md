@@ -117,7 +117,8 @@ Decisions:
 | `app/src/main/AndroidManifest.xml` | MVP | remove `INTERNET`; `android:label="@string/calm_app_name"`; add our permissions, activities, service, receivers |
 | `app/src/main/res/xml/accessibility_service_config.xml` | MVP | `packageNames` → `app.calmlauncher.debug, app.calmlauncher` (keeps double-tap-to-lock working) |
 | `app/src/main/java/app/olauncher/MainViewModel.kt` | MVP | in `selectedApp()`, the two launch branches call `LaunchGate.intercept(...)` first (≈6 lines) |
-| `app/src/main/java/app/olauncher/MainActivity.kt` | MVP | `onResume()`: `CalmHooks.onLauncherResumed(this)` (1 line); remove the two `setWallpaperWorker()` triggers (L192–194, L222) |
+| `app/src/main/java/app/olauncher/MainActivity.kt` | MVP | `onResume()`: `CalmHooks.onLauncherResumed(this)` (1 line); new `onPause()` override calling `CalmHooks.onLauncherPaused(this)`; remove the two `setWallpaperWorker()` triggers (L192–194, L222) |
+| `app/src/main/res/xml/data_extraction_rules.xml`, `app/src/main/res/xml/backup_rules.xml` | MVP | exclude `calm.db` and the `calm_settings` DataStore from cloud backup and device transfer |
 | `app/src/main/java/app/olauncher/ui/SettingsFragment.kt` + `res/layout/fragment_settings.xml` + `res/layout-land/fragment_settings.xml` | MVP | add "Screen time" row; hide "Daily wallpaper" row and upstream promo links (`visibility="gone"`) |
 | `app/src/main/res/layout/fragment_home.xml` + `ui/HomeFragment.kt` | MVP | one `TextView` for the health line; 3 lines to bind it; `changeAppTheme()` no longer schedules the wallpaper worker |
 | `app/src/main/java/app/olauncher/helper/MyAccessibilityService.kt`, `helper/Utils.kt` (`isAccessServiceEnabled`) | P2 | merge into our service (see §3.3) |
@@ -412,7 +413,7 @@ Example rule (illustrative IDs; the real ones are captured on the device during 
 - **Room** (SQLite) holds relational and historical data: sessions, logs, rules, schedules, and pending changes. Queries for stats and caps are SQL; migrations are explicit.
 - **Preferences DataStore** holds small settings, flows and atomic writes.
 
-Upstream's `Prefs` (SharedPreferences) is left alone. Everything runs in the main process, since we avoid upstream's `:serviceProcess`. `android:allowBackup` stays upstream's value, but our database and DataStore files are excluded in `data_extraction_rules` (P2 edit if needed), so nothing leaves the device through cloud backup.
+Upstream's `Prefs` (SharedPreferences) is left alone. Everything runs in the main process, since we avoid upstream's `:serviceProcess`. `android:allowBackup` stays upstream's value, but our database and DataStore files are excluded in `data_extraction_rules.xml` and `backup_rules.xml` (MVP edit), so nothing leaves the device through cloud backup.
 
 ```mermaid
 erDiagram
