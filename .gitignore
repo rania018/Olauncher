@@ -16,3 +16,8 @@
 .externalNativeBuild
 .cxx
 google-services.json
+
+# Kotlin compiler session data
+.kotlin/
+# Claude Code local settings (may contain machine-specific data)
+.claude/settings.local.json
