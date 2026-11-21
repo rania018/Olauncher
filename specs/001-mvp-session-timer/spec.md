@@ -208,7 +208,7 @@ choose tracked apps, presets and the warning time.
 - **FR-025**: Existing upstream features (home labels, search, gestures, double-tap-to-lock, hidden apps, Private Space) MUST keep working.
 
 **Records**
-- **FR-026**: Each session MUST be recorded with app, start, declared minutes, actual minutes, end reason (expired, ended by user, left early, cancelled, interrupted) and number of extensions.
+- **FR-026**: Each session MUST be recorded with app, start, declared minutes, actual minutes, end reason (expired, ended by user, left early, interrupted); a cancelled prompt starts no session and is recorded as an event (FR-027) and number of extensions.
 - **FR-027**: Prompt cancellations, extensions, overrides, card time-outs, fail-open errors and (if usage access is granted) unplanned opens MUST be recorded as events.
 
 ### Key Entities

@@ -34,7 +34,7 @@ tables arrive with their phase through Room migrations.
 | Running / Warning | `EndedByUser` | | Idle | `EndSession(ENDED_BY_USER)`, `GoHome` |
 | Running / Warning | `LauncherResumed(now)` | | same | `ScheduleAt(now + grace, GraceCheck)` |
 | Running / Warning | `GraceElapsed` | still on launcher | Idle | `EndSession(LEFT_EARLY)` |
-| Running / Warning | `LaunchRequested(other key)` | | Prompting(other) | `EndSession(LEFT_EARLY)` for the current one |
+| Running / Warning | `DurationChosen(other key)` | prompt for another app confirmed | Running(other) | `EndSession(LEFT_EARLY)` for the current one, then as `DurationChosen` above (a cancelled prompt leaves the current session untouched) |
 | Any active | `Reconcile(now)` | now ≥ deadline and process restarted / after boot | Idle or Cooldown | `EndSession(EXPIRED, at=deadline)` with no UI |
 | Any | `AppUninstalled(key)` | | Idle | `EndSession(INTERRUPTED)` |
 | Any | exception in `reduce` | | unchanged | `Log(ERROR)` only; the adapter treats it as `Allow` / no UI |

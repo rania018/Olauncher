@@ -199,7 +199,7 @@ As a user, I want a broken rule to switch itself off and tell me, instead of mis
 ## Epic S: Stats
 
 ### US-S1: Session log (MUST, MVP; S1)
-1. Given any session ends (expired, ended early, left, cancelled at the prompt, extended, overridden), then a record with app, start, declared minutes, actual minutes, end reason and extension count is stored locally.
+1. Given any session ends (expired, ended by user, left early, interrupted; extensions and overrides counted on it), then a record with app, start, declared minutes, actual minutes, end reason and extension count is stored locally.
 2. Given the app is uninstalled, then all data is removed. There are no backups: `allowBackup` is false for our data.
 
 ### US-S2: Stats screen (SHOULD, Later P3; S2–S5)

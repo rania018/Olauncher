@@ -432,7 +432,7 @@ erDiagram
 ```
 
 - `EVENT_LOG.type` values: `PROMPT_CANCELLED`, `EXTENDED`, `OVERRIDE`, `UNPLANNED_OPEN`, `OVERLAY_TIMEOUT`, `RULE_FIRED`, `RULE_STALE`, `SERVICE_INTERRUPTED`, `LOOP_GUARD`.
-- `SESSION.endReason` values: `EXPIRED`, `ENDED_BY_USER`, `LEFT_EARLY`, `CANCELLED`, `INTERRUPTED`.
+- `SESSION.endReason` values: `EXPIRED`, `ENDED_BY_USER`, `LEFT_EARLY`, `INTERRUPTED`. A cancelled prompt creates no session, only a `PROMPT_CANCELLED` event.
 - At most one `SESSION` row has `endedAt IS NULL`. The repository enforces this inside a transaction.
 - DataStore keys: `warningLeadSec` (60), `extensionWaitSec` (15), `maxExtensions` (2), `overrideWaitSec` (30, min 10), `graceSec` (120), `pausedUntil`, `onboardingVersion`, `grayscaleSchedule`.
 - MVP uses `TRACKED_APP` (presets only), `EXEMPT_APP`, `SESSION` and `EVENT_LOG`. Other tables arrive with their phase, each through a Room migration.
