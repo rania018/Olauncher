@@ -110,9 +110,9 @@ As a user, I want to state why I'm opening an app, so that I notice habit opens.
 1. Given intent prompts are on for Instagram, when the prompt shows, then I pick a chip (Reply to message / Check someone / Specific search / Bored / Habit) or type text, and only then the duration options appear.
 2. Given I answered, when the session ends, then the answer is stored with the session and visible in stats.
 
-### US-F3: Cooldown (SHOULD, Later P2; F3)
+### US-F3: Cooldown (MUST, MVP: after expiry only, 10 min default; SHOULD, Later P2: after any session; F3)
 As a user, I want a pause between sessions of the same app, so that I don't chain sessions.
-1. Given a 30 min cooldown and a session that ended at 14:00, when I open Instagram at 14:10, then I see "Instagram is available again at 14:30" with "Go home" (default) and the emergency override.
+1. Given a 30 min cooldown and a session that expired at 14:00, when I open Instagram at 14:10, then I see "Instagram is available again at 14:30" with "Go home" (default) and the emergency override.
 2. Given the emergency override is completed, when it finishes, then the prompt appears and the override is logged.
 
 ### US-F4: "One more?" pause (COULD, Later P2; F4)

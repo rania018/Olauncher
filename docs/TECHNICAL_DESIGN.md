@@ -240,7 +240,7 @@ checks in this **fixed order**. The first match wins.
 | 4 | Session already running for this app | `Allow` (continue) |
 | 5 | Inside an active schedule block or focus session (P2) | `Blocked(Schedule, until)` |
 | 6 | Daily session count or minutes cap reached (P2) | `Blocked(Cap, untilMidnight)` |
-| 7 | In cooldown (P2) | `Blocked(Cooldown, until)` |
+| 7 | In cooldown (MVP: after an expired session; P2: after any session) | `Blocked(Cooldown, until)` |
 | 8 | Last session ended < N min ago (P2) | `ConfirmAgain(lastSession)` |
 | 9 | Launch delay > 0 (P2) | `Delay(seconds)`, then continue at 10 |
 | 10 | Intent prompt on (P2) | `AskIntent`, then continue at 11 |
@@ -516,7 +516,7 @@ Coverage goal: 100% of engine transitions and rule-order branches. No coverage t
 
 | Phase | Scope | Exit criteria |
 |---|---|---|
-| **MVP** | Fork identity, `INTERNET` removed; `:engine` with session machine + rules (exempt, tracked, running); launcher hook; `PromptActivity` (How long?); `SessionService` with countdown notification; warning; time's-up overlay with soft extension + override; call/keyguard guards; reboot/kill reconciliation; Room (tracked, exempt, session, log); settings + onboarding; health line | US-L1, L2, T1–T8, B1, B6, B7 (expiry), S1, X1, X3 pass on the Samsung phone; engine tests green; manual device script passes |
+| **MVP** | Fork identity, `INTERNET` removed; `:engine` with session machine + rules (exempt, tracked, running, post-expiry cooldown); launcher hook; `PromptActivity` (How long?); `SessionService` with countdown notification; warning; time's-up overlay with soft extension + override; call/keyguard guards; reboot/kill reconciliation; Room (tracked, exempt, session, log); settings + onboarding; health line | US-L1, L2, T1–T8, F3 (post-expiry), B1, B6, B7 (expiry + cooldown), S1, X1, X3 pass on the Samsung phone; engine tests green; manual device script passes |
 | **Phase 2** | `FocusAccessibilityService` (window events; merge upstream lock service); outside-launcher interception; schedules, focus sessions, caps, cooldown, launch delay, intent prompt, "one more?", nudges; delayed loosening; pause-all; grayscale; basic stats list | US-B2–B5, F1–F6, L3, L4, X2, X4 |
 | **Phase 3** | Content filtering (Instagram, Facebook): JSON rules, matcher, health, fallback ladder; scrolling nudge; stats screen, time-saved, export; Firefox + uBlock filter guide | US-C1–C4, S2, F5.2 |
 

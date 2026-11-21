@@ -85,7 +85,7 @@ MVP, P2 or P3.
 | T4 | Visible but unobtrusive timer: ongoing notification with a live countdown (MVP); optional small overlay pill (P2) | MUST / SHOULD | MVP / P2 |
 | T5 | Warning at a configurable point (default 1 min left), shown as a heads-up notification (MVP) or overlay (P2) | MUST | MVP |
 | T6 | End of session: calm full-screen "Time's up" screen, then return to home. Choices: *Go home* (default) or *Extend* | MUST | MVP |
-| T7 | Extension with friction: +2 / +5 min, available only after a 15 s wait, max 2 extensions per session, each logged | MUST | MVP |
+| T7 | Extension with friction: +2 / +5 min, available only after a 15 s wait, max 2 extensions per session, each logged. The emergency override grants a fixed 5 min | MUST | MVP |
 | T8 | Timer survives launcher process death and reboot (state persisted, deadline-based) | MUST | MVP |
 | T9 | Calls are never interrupted: expiry is deferred while a call is active (phone or VoIP) | MUST | MVP |
 
@@ -95,7 +95,7 @@ MVP, P2 or P3.
 |---|---|---|---|
 | F1 | Launch delay per app (0–30 s, for example 10 s), shown as a calm countdown before the prompt; cancel at any time | SHOULD | P2 |
 | F2 | "Why are you opening this?" intent prompt per app: quick chips (Reply to message / Check someone / Specific search / Bored / Habit) plus free text; answers logged locally | SHOULD | P2 |
-| F3 | Cooldown between sessions of the same app (for example 30 min); during cooldown, opening shows "Available again at 14:20" with the emergency override | SHOULD | P2 |
+| F3 | Cooldown between sessions of the same app. MVP: after an *expired* session only, default 10 min (0–60). P2: after any session, per-app length. During cooldown, opening shows "Available again at 14:20" with the emergency override | MUST (simple) / SHOULD | MVP / P2 |
 | F4 | "One more?" pause: re-opening an app within N minutes of a session ending shows the previous session's length and asks again (softer than cooldown) | COULD | P2 |
 | F5 | Gentle periodic nudge during a session (for example every 5 min: "5 min in Instagram") | SHOULD | P2 |
 | F6 | Scrolling detector: "You have been scrolling for X min" when scroll events continue for X minutes (needs accessibility) | COULD | P3 |
@@ -175,11 +175,12 @@ filters. That last option is outside this app and is documented in TECHNICAL_DES
 | R9 | Upstream merges conflict with our hooks | Medium | Low | Hooks are one-liners in listed files; our code in separate packages |
 | R10 | Losing the debug signing key makes updates require uninstall (losing permissions and data) | Low | Medium | Keep a dedicated keystore outside the repo (documented in DEV_SETUP when created) |
 
-## 9. Open questions
+## 9. Decisions from clarification (2026-11-21)
 
-These go to `/speckit-clarify`:
+These are recorded in `specs/001-mvp-session-timer/spec.md` → Clarifications.
 
-1. Does the session clock keep running while I'm outside the app (wall clock), or only while the app is in front?
-2. What happens when I go home before the timer ends: does the session end, or is there a grace window for coming back via Recents?
-3. Are extensions limited per session (proposed: 2), or unlimited but logged?
-4. Exact default exempt apps on my phone (package names for my bank and authenticator).
+1. Session clock: wall clock; staying on the home screen for 2+ minutes ends the session as "left early".
+2. Extensions: at most 2 per session, then only the override.
+3. Default exempt categories: phone, SMS, maps, camera, clock, settings, plus messaging, banking/payments, authenticator and transport/ride apps picked during onboarding.
+4. Cooldown: in the MVP, 10 min after an expired session only.
+5. Override: grants a fixed 5-minute session.
