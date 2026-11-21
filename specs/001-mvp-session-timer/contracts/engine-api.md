@@ -18,7 +18,7 @@ data class Config(
 sealed interface Decision {
     data class Allow(val reason: AllowReason) : Decision          // EXEMPT, NOT_TRACKED, RUNNING, FAIL_OPEN
     data class AskDuration(val presetsMin: List<Int>, val customMaxMin: Int) : Decision
-    class Blocked(val kind: BlockKind, val until: Long) : Decision { val overridable = true } // MVP kind: COOLDOWN
+    data class Blocked(val kind: BlockKind, val until: Long) : Decision { val overridable get() = true } // MVP kind: COOLDOWN
 }
 
 object RulesEngine {
@@ -56,6 +56,8 @@ object CalmHooks {
     fun onLauncherPaused(activity: Activity)
     /** Text for the home health line, or null when everything is fine. */
     fun healthLine(context: Context): String?
+    /** Sets the health line view's text, visibility and tap target (opens the matching onboarding page). */
+    fun bindHealthLine(view: TextView)
 }
 ```
 
@@ -68,4 +70,15 @@ Both entry points wrap their body in `failOpen { ... }`: on any `Throwable`, `in
 |---|---|---|
 | `MainViewModel.kt` | `selectedApp()`, branches `FLAG_LAUNCH_APP` and `FLAG_HIDDEN_APPS` | `if (LaunchGate.intercept(appContext, appModel)) return` before the launch call |
 | `MainActivity.kt` | `onResume()` / `onPause()` | `CalmHooks.onLauncherResumed(this)` / `CalmHooks.onLauncherPaused(this)` |
-| `ui/HomeFragment.kt` | `onResume` (existing) | `binding.calmHealth.text = CalmHooks.healthLine(requireContext())` and visibility |
+| `MainActivity.kt` | `checkForMessages()` | `return` as the first line: no upstream wallpaper, rating, sharing or Pro dialogs (FR-002) |
+| `ui/HomeFragment.kt` | `onResume` (existing) | `CalmHooks.bindHealthLine(binding.calmHealth)` |
+| `ui/SettingsFragment.kt` | `onClick`, `initClickListeners` | `R.id.calmScreenTime -> ScreenTimeSettingsActivity.open(...)` and its click listener |
+
+## Additional engine helpers (added during implementation)
+
+```kotlin
+RulesEngine.cooldownUntil(app, history, cooldownMin, now): Long?        // decide step 7 and state rebuild
+fun SessionState.session(): SessionState                                // the state behind an open prompt
+val SessionState.activeRecord: SessionRecord?                           // running or expired session, if any
+UnplannedOpens.find(resumes, trackedPkgs, sessions, now): List<Resume>  // T065, pure
+```

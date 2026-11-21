@@ -112,15 +112,15 @@ Decisions:
 |---|---|---|
 | `settings.gradle` | MVP | `include ':engine'` |
 | `build.gradle` (root) | MVP | add KSP plugin classpath (for Room) |
-| `gradle/libs.versions.toml` | MVP | add room, datastore, ksp, coroutines-test versions |
-| `app/build.gradle` | MVP | `applicationId "app.calmlauncher"`, `implementation project(':engine')`, Room/DataStore deps, `apply plugin: 'com.google.devtools.ksp'` |
-| `app/src/main/AndroidManifest.xml` | MVP | remove `INTERNET`; `android:label="@string/calm_app_name"`; add our permissions, activities, service, receivers |
+| `gradle/libs.versions.toml` | MVP | add room, datastore, ksp, androidx test runner / ext-junit versions |
+| `app/build.gradle` | MVP | `applicationId "app.calmlauncher"`, `implementation project(':engine')`, Room/DataStore deps, `apply plugin: 'com.google.devtools.ksp'`, `ksp { room.schemaLocation }`, androidTest deps |
+| `app/src/main/AndroidManifest.xml` | MVP | remove `INTERNET` and (merged) `ACCESS_NETWORK_STATE`; `android:label="@string/calm_app_name"` on the application and on upstream's accessibility service; add our permissions, activities, service, receivers |
 | `app/src/main/res/xml/accessibility_service_config.xml` | MVP | `packageNames` → `app.calmlauncher.debug, app.calmlauncher` (keeps double-tap-to-lock working) |
-| `app/src/main/java/app/olauncher/MainViewModel.kt` | MVP | in `selectedApp()`, the two launch branches call `LaunchGate.intercept(...)` first (≈6 lines) |
-| `app/src/main/java/app/olauncher/MainActivity.kt` | MVP | `onResume()`: `CalmHooks.onLauncherResumed(this)` (1 line); new `onPause()` override calling `CalmHooks.onLauncherPaused(this)`; remove the two `setWallpaperWorker()` triggers (L192–194, L222) |
-| `app/src/main/res/xml/data_extraction_rules.xml`, `app/src/main/res/xml/backup_rules.xml` | MVP | exclude `calm.db` and the `calm_settings` DataStore from cloud backup and device transfer |
-| `app/src/main/java/app/olauncher/ui/SettingsFragment.kt` + `res/layout/fragment_settings.xml` + `res/layout-land/fragment_settings.xml` | MVP | add "Screen time" row; hide "Daily wallpaper" row and upstream promo links (`visibility="gone"`) |
-| `app/src/main/res/layout/fragment_home.xml` + `ui/HomeFragment.kt` | MVP | one `TextView` for the health line; 3 lines to bind it; `changeAppTheme()` no longer schedules the wallpaper worker |
+| `app/src/main/java/app/olauncher/MainViewModel.kt` | MVP | in `selectedApp()`, the two launch branches call `LaunchGate.intercept(...)` first (2 lines + import) |
+| `app/src/main/java/app/olauncher/MainActivity.kt` | MVP | `onResume()`: `CalmHooks.onLauncherResumed(this)` (1 line); new `onPause()` override calling `CalmHooks.onLauncherPaused(this)`; the two `setWallpaperWorker()` calls (L192–194, L222) commented out; `checkForMessages()` returns at once, so upstream's wallpaper, rating, sharing and Pro dialogs never show (FR-002). The already-scheduled wallpaper worker is cancelled from our `CalmHooks`, not here |
+| `app/src/main/res/xml/data_extraction_rules.xml`, `app/src/main/res/xml/backup_rules.xml` | MVP | exclude `calm.db` (+ `-wal`, `-shm`, `-journal`) and the `calm_settings` DataStore from cloud backup and device transfer |
+| `app/src/main/java/app/olauncher/ui/SettingsFragment.kt` + `res/layout/fragment_settings.xml` + `res/layout-land/fragment_settings.xml` | MVP | add "Screen time limits" row (`calmScreenTime`, 2 lines in the fragment); hide the "Daily wallpaper" row, About, More features, Share, Rate, X/Twitter and the footer promotion (`visibility="gone"`) |
+| `app/src/main/res/layout/fragment_home.xml` + `res/layout-land/fragment_home.xml` + `ui/HomeFragment.kt` | MVP | one `TextView` (`calmHealth`) under the date in both orientations; 1 line in `onResume` (`CalmHooks.bindHealthLine`); `changeAppTheme()` no longer schedules the wallpaper worker (line commented out) |
 | `app/src/main/java/app/olauncher/helper/MyAccessibilityService.kt`, `helper/Utils.kt` (`isAccessServiceEnabled`) | P2 | merge into our service (see §3.3) |
 
 Left untouched on purpose: `WallpaperWorker.kt` and the network helpers in `Utils.kt` become

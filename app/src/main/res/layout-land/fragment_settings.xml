@@ -63,8 +63,20 @@
                     android:layout_marginBottom="8dp"
                     android:text="@string/set_as_default_launcher" />
 
+                <!-- Calm Launcher: entry to our own screen-time settings -->
+                <TextView
+                    android:id="@+id/calmScreenTime"
+                    style="@style/TextSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="8dp"
+                    android:text="@string/calm_screen_time_limits" />
+
                 <TextView
                     android:id="@+id/aboutOlauncher"
+                    android:visibility="gone"
                     style="@style/TextSmall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -77,6 +89,7 @@
 
                 <TextView
                     android:id="@+id/moreFeatures"
+                    android:visibility="gone"
                     style="@style/TextSmall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -249,6 +262,7 @@
                 </FrameLayout>
 
                 <FrameLayout
+                    android:visibility="gone"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="12dp">
@@ -524,6 +538,7 @@
 
                 <TextView
                     android:id="@+id/share"
+                    android:visibility="gone"
                     style="@style/TextSmall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -533,6 +548,7 @@
 
                 <TextView
                     android:id="@+id/rate"
+                    android:visibility="gone"
                     style="@style/TextSmall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -551,6 +567,7 @@
 
                 <TextView
                     android:id="@+id/twitter"
+                    android:visibility="gone"
                     style="@style/TextSmall"
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
@@ -562,6 +579,7 @@
 
             <TextView
                 android:id="@+id/footer"
+                android:visibility="gone"
                 style="@style/TextSmallBold"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"

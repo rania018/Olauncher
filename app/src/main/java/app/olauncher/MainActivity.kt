@@ -21,6 +21,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavController
 import androidx.navigation.findNavController
+import app.calmlauncher.CalmHooks
 import app.olauncher.data.Constants
 import app.olauncher.data.Prefs
 import app.olauncher.databinding.ActivityMainBinding
@@ -135,6 +136,12 @@ class MainActivity : AppCompatActivity() {
         isResumed = true
         viewModel.isPrivateSpaceToggling = false
         viewModel.getAppList()
+        CalmHooks.onLauncherResumed(this) // Calm Launcher
+    }
+
+    override fun onPause() {
+        CalmHooks.onLauncherPaused(this) // Calm Launcher
+        super.onPause()
     }
 
     private fun registerShortcutCallback() {
@@ -191,7 +198,7 @@ class MainActivity : AppCompatActivity() {
         AppCompatDelegate.setDefaultNightMode(prefs.appTheme)
         if (prefs.dailyWallpaper && AppCompatDelegate.getDefaultNightMode() == AppCompatDelegate.MODE_NIGHT_FOLLOW_SYSTEM) {
             setPlainWallpaper()
-            viewModel.setWallpaperWorker()
+            // viewModel.setWallpaperWorker() // Calm Launcher: no network wallpaper
             recreate()
         }
     }
@@ -220,7 +227,7 @@ class MainActivity : AppCompatActivity() {
                     prefs.userState = Constants.UserState.REVIEW
                     showMessage(R.string.did_you_know, R.string.wallpaper_message, R.string.enable) {
                         prefs.dailyWallpaper = true
-                        viewModel.setWallpaperWorker()
+                        // viewModel.setWallpaperWorker() // Calm Launcher: no network wallpaper
                         showToast(getString(R.string.your_wallpaper_will_update_shortly))
                     }
                 }
@@ -282,6 +289,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun checkForMessages() {
+        return // Calm Launcher: no upstream wallpaper, rating, sharing or Pro prompts (FR-002)
         if (prefs.firstOpenTime == 0L)
             prefs.firstOpenTime = System.currentTimeMillis()
 

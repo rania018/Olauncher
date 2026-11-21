@@ -1,5 +1,7 @@
 apply plugin: 'com.android.application'
 apply plugin: 'kotlin-android'
+// KSP generates Room's database code at compile time (Calm Launcher)
+apply plugin: 'com.google.devtools.ksp'
 
 android {
     compileSdk 36
@@ -14,7 +16,8 @@ android {
     }
 
     defaultConfig {
-        applicationId "app.olauncher"
+        // Calm Launcher has its own identity so it installs next to upstream Olauncher (research R12)
+        applicationId "app.calmlauncher"
         minSdkVersion 24
         targetSdkVersion 36
         versionCode 117
@@ -48,6 +51,11 @@ android {
     namespace 'app.olauncher'
 }
 
+// Room writes its schema JSON here so database migrations can be reviewed and tested (Calm Launcher)
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas".toString())
+}
+
 dependencies {
     implementation fileTree(dir: "libs", include: ["*.jar"])
     implementation libs.kotlin.stdlib
@@ -68,5 +76,16 @@ dependencies {
     //Material dependency
     implementation libs.material
 
+    // Calm Launcher: pure-Kotlin rules engine, Room database and DataStore settings
+    implementation project(':engine')
+    implementation libs.room.runtime
+    implementation libs.room.ktx
+    ksp libs.room.compiler
+    implementation libs.datastore.preferences
+
     testImplementation libs.junit
+
+    // Calm Launcher: instrumented Room DAO test (needs a connected phone)
+    androidTestImplementation libs.androidx.test.runner
+    androidTestImplementation libs.androidx.test.ext.junit
 }

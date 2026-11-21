@@ -144,7 +144,7 @@ standalone Activities, so upstream's navigation graph is untouched.
 
 | Violation | Why Needed | Simpler Alternative Rejected Because |
 |-----------|------------|-------------------------------------|
-| 5 s re-check timer while expiry is deferred by a call, API < 31 only (Principle V) | Android < 12 has no callback for audio-mode changes; without a re-check the card would never show after a call | `TelephonyCallback` needs `READ_PHONE_STATE` and misses VoIP calls; the loop runs only while a call blocks an expiry and stops immediately after |
+| 5 s re-check timer while expiry is deferred by a call, or while the time's-up card is up (at most 120 s), API < 31 only (Principle V) | Android < 12 has no callback for audio-mode changes; without a re-check the card would never show after a call, and an incoming call would not hide the card | `TelephonyCallback` needs `READ_PHONE_STATE` and misses VoIP calls; the loop runs only in those two moments and stops immediately after |
 | `SYSTEM_ALERT_WINDOW` before Phase 2 accessibility | Only reliable way to show the time's-up card over another app and return home without background-activity-start failures (R5) | A full-screen-intent notification only becomes a heads-up while the screen is on, and Android 14+ limits it |
 
 ## Phase 0 / Phase 1 outputs

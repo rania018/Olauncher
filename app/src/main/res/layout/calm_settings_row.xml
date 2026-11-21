@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:gravity="center_vertical"
+    android:minHeight="48dp"
+    android:orientation="horizontal"
+    android:paddingHorizontal="24dp">
+
+    <TextView
+        android:id="@+id/calmRowLabel"
+        style="@style/TextSmall"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:ellipsize="end"
+        android:maxLines="1"
+        tools:text="Instagram" />
+
+    <TextView
+        android:id="@+id/calmRowTrack"
+        style="@style/CalmButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/calm_settings_tracked"
+        android:textSize="@dimen/text_small" />
+
+    <TextView
+        android:id="@+id/calmRowExempt"
+        style="@style/CalmButton"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/calm_settings_exempt"
+        android:textSize="@dimen/text_small" />
+</LinearLayout>

@@ -53,6 +53,7 @@ Phase 0 output for [plan.md](plan.md). Background analysis lives in `docs/TECHNI
 - **Decision**: `AudioManager.mode` in {`MODE_IN_CALL`, `MODE_IN_COMMUNICATION`, `MODE_RINGTONE`} means the expiry UI is deferred. `KeyguardManager.isKeyguardLocked` means deferral. Re-checks happen on `AudioManager.OnModeChangedListener` (API 31+) or a 5-s re-check loop **only while deferred** (API < 31), and on `ACTION_USER_PRESENT`.
 - **Rationale**: No `READ_PHONE_STATE` needed; covers VoIP (WhatsApp/Meet).
 - **Alternative**: `TelephonyCallback` needs the phone-state permission and misses VoIP.
+- **Implementation note (2026-11-21)**: the guard also watches while the time's-up card is up, so an incoming call hides the card (an app overlay would otherwise sit above the in-call screen). Screen off counts as "locked". When a deferral clears, the probe waits 2 s so the call screen is no longer the last resumed app in usage history.
 
 ## R8. Default exemptions
 - **Decision**: Resolve them on the device, and re-resolve on package changes:
@@ -64,6 +65,7 @@ Phase 0 output for [plan.md](plan.md). Background analysis lives in `docs/TECHNI
 
   Onboarding then asks for messaging, banking/payments, authenticator and transport/ride apps. It suggests matches by a known-package list (for example `com.whatsapp`, `org.telegram.messenger`, `com.google.android.apps.authenticator2`), and the user confirms them.
 - **Rationale**: Works whichever apps the user has chosen as default; no hard-coded vendor assumptions.
+- **Implementation note (2026-11-21)**: `RoleManager` only tells an app whether it holds a role itself (`getRoleHolders` is a system API), so the current dialer and SMS apps are read with the public `TelecomManager.getDefaultDialerPackage()` and `Telephony.Sms.getDefaultSmsPackage()`, with the intent fallbacks above. When an intent has no default handler, every candidate is exempted (the safe direction). Dialer, SMS and Settings are stored with category `SYSTEM` and cannot be removed, so the default list never becomes empty (Constitution II).
 
 ## R9. Leaving early (wall clock + 2-min grace)
 - **Decision**: The launcher `onResume` hook records `leftAt` for the active session and schedules a grace check, as an in-service callback at `leftAt + 2 min`. When it fires:

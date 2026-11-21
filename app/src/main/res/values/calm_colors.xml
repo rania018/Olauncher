@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Calm Launcher surfaces: plain white in the light theme, plain black in the dark theme -->
+<resources>
+    <color name="calm_background">#FFFFFF</color>
+    <color name="calm_prompt_scrim">#F2FFFFFF</color>
+</resources>

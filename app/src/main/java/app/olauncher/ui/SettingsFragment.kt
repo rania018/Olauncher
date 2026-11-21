@@ -20,6 +20,7 @@ import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.os.bundleOf
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import app.calmlauncher.settings.ScreenTimeSettingsActivity
 import app.olauncher.BuildConfig
 import app.olauncher.MainViewModel
 import app.olauncher.R
@@ -103,6 +104,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
     override fun onClick(view: View) {
         when (view.id) {
             R.id.olauncherHiddenApps -> showHiddenApps()
+            R.id.calmScreenTime -> ScreenTimeSettingsActivity.open(requireContext()) // Calm Launcher
             R.id.moreFeatures -> viewModel.showDialog.postValue(Constants.Dialog.PRO_MESSAGE)
             R.id.screenTimeOnOff -> viewModel.showDialog.postValue(Constants.Dialog.DIGITAL_WELLBEING)
             R.id.appInfo -> openAppInfo(requireContext(), Process.myUserHandle(), BuildConfig.APPLICATION_ID)
@@ -171,6 +173,7 @@ class SettingsFragment : BaseFragment(), View.OnClickListener, View.OnLongClickL
 
     private fun initClickListeners() {
         binding.olauncherHiddenApps.setOnClickListener(this)
+        binding.calmScreenTime.setOnClickListener(this) // Calm Launcher
         binding.appInfo.setOnClickListener(this)
         binding.setLauncher.setOnClickListener(this)
         binding.aboutOlauncher.setOnClickListener(this)

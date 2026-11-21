@@ -24,6 +24,7 @@ import androidx.core.view.setPadding
 import androidx.lifecycle.Observer
 import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.fragment.findNavController
+import app.calmlauncher.CalmHooks
 import app.olauncher.MainViewModel
 import app.olauncher.R
 import app.olauncher.data.AppModel
@@ -80,6 +81,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
     override fun onResume() {
         super.onResume()
         populateHomeScreen(false)
+        CalmHooks.bindHealthLine(binding.calmHealth) // Calm Launcher
         viewModel.isOlauncherDefault()
         if (prefs.showStatusBar) showStatusBar()
         else hideStatusBar()
@@ -596,7 +598,7 @@ class HomeFragment : BaseFragment(), View.OnClickListener, View.OnLongClickListe
         prefs.appTheme = changedAppTheme
         if (prefs.dailyWallpaper) {
             setPlainWallpaperByTheme(requireContext(), changedAppTheme)
-            viewModel.setWallpaperWorker()
+            // viewModel.setWallpaperWorker() // Calm Launcher: no network wallpaper
         }
         requireActivity().recreate()
     }

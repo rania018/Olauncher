@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Calm Launcher strings. Plain, calm, English (contracts/ui-surfaces.md). Kept out of upstream's
+     strings.xml so upstream merges stay easy. -->
+<resources xmlns:tools="http://schemas.android.com/tools" tools:ignore="MissingTranslation">
+    <string name="calm_app_name" translatable="false">Calm Launcher</string>
+    <string name="calm_screen_time_limits">Screen time limits</string>
+
+    <!-- Duration prompt -->
+    <string name="calm_prompt_how_long">How long?</string>
+    <string name="calm_minutes_short">%1$d min</string>
+    <string name="calm_prompt_other">Other</string>
+    <string name="calm_prompt_other_hint">min</string>
+    <string name="calm_prompt_open">Open</string>
+    <string name="calm_prompt_custom_error">Enter a number from 1 to %1$d</string>
+    <string name="calm_cancel">Cancel</string>
+
+    <!-- Cooldown screen and override -->
+    <string name="calm_blocked_title">%1$s is available again at %2$s</string>
+    <string name="calm_go_home">Go home</string>
+    <string name="calm_override">I really need this</string>
+    <string name="calm_override_wait">Wait %1$d s</string>
+    <string name="calm_override_hint">Then %1$s opens for %2$d min</string>
+
+    <!-- Session sheet (tap on the countdown notification) -->
+    <string name="calm_session_ends_at">Session ends at %1$s</string>
+    <string name="calm_session_over">This session has ended</string>
+    <string name="calm_end_now">End now</string>
+    <string name="calm_close">Close</string>
+
+    <!-- Notifications -->
+    <string name="calm_channel_session">Session countdown</string>
+    <string name="calm_channel_session_desc">Silent countdown while a session runs</string>
+    <string name="calm_channel_warning">Session warning</string>
+    <string name="calm_channel_warning_desc">One heads-up shortly before a session ends</string>
+    <string name="calm_channel_expiry">Time\'s up</string>
+    <string name="calm_channel_expiry_desc">Shown when the time\'s-up card cannot be drawn</string>
+    <string name="calm_notif_timer">Session timer</string>
+    <string name="calm_warning_one_minute">1 minute left in %1$s</string>
+    <string name="calm_warning_minutes">%1$d minutes left in %2$s</string>
+    <string name="calm_warning_seconds">%1$d seconds left in %2$s</string>
+    <string name="calm_expiry_title">Time\'s up in %1$s</string>
+    <string name="calm_expiry_text">Tap to go home</string>
+
+    <!-- Time's-up card -->
+    <string name="calm_card_title">Time\'s up</string>
+    <string name="calm_card_subtitle">%1$d min in %2$s</string>
+    <string name="calm_card_extend">Extend</string>
+    <string name="calm_card_extend_wait">Available in %1$d s</string>
+    <string name="calm_card_extend_option">+%1$d min</string>
+
+    <!-- Screen time settings -->
+    <string name="calm_settings_hint">Tracked apps ask “How long?” before they open from this launcher. Exempt apps always open straight away, even if tracked.</string>
+    <string name="calm_settings_defaults">Sessions</string>
+    <string name="calm_settings_presets">Session lengths (minutes)</string>
+    <string name="calm_settings_cooldown">Cooldown after time\'s up (minutes, 0 = off)</string>
+    <string name="calm_settings_warning">Warning before the end (seconds, 0 = off)</string>
+    <string name="calm_settings_extension_wait">Wait before extending (seconds)</string>
+    <string name="calm_settings_apply_note">Session lengths and cooldown apply to every tracked app. Long-press a tracked app to set its own.</string>
+    <string name="calm_settings_save">Save</string>
+    <string name="calm_settings_saved">Saved</string>
+    <string name="calm_settings_apps">Apps</string>
+    <string name="calm_settings_search">Search apps</string>
+    <string name="calm_settings_tracked">track</string>
+    <string name="calm_settings_exempt">exempt</string>
+    <string name="calm_settings_permissions">Permissions status</string>
+    <string name="calm_settings_invalid_presets">Use whole minutes from 1 to 60, separated by commas.</string>
+    <string name="calm_settings_work_suffix">%1$s (work)</string>
+    <string name="calm_settings_other_profile_suffix">%1$s (profile %2$d)</string>
+    <string name="calm_remove_default_title">Remove from exempt apps?</string>
+    <string name="calm_remove_default_message">%1$s is exempt by default. If you remove it, it will follow your tracking rules (prompt, timer and cooldown) whenever it is tracked.</string>
+    <string name="calm_remove">Remove</string>
+    <string name="calm_always_exempt">Phone, messages and Settings are always exempt.</string>
+    <string name="calm_per_app_title">%1$s</string>
+    <string name="calm_per_app_presets">Session lengths (minutes)</string>
+    <string name="calm_per_app_cooldown">Cooldown (minutes, 0 = off)</string>
+
+    <!-- Onboarding -->
+    <string name="calm_onb_step">%1$d of %2$d</string>
+    <string name="calm_onb_open_setting">Open setting</string>
+    <string name="calm_onb_skip">Skip</string>
+    <string name="calm_onb_next">Next</string>
+    <string name="calm_onb_done">Done</string>
+    <string name="calm_onb_allowed">✓ Allowed</string>
+    <string name="calm_onb_not_allowed">✗ Not allowed</string>
+    <string name="calm_onb_not_needed">✓ Not needed on this Android version</string>
+
+    <string name="calm_onb_notifications_title">Notifications</string>
+    <string name="calm_onb_notifications_why">Shows a silent countdown while a session runs, one warning before it ends, and “End now”.</string>
+    <string name="calm_onb_notifications_reduced">Without it: sessions still end on time, but you cannot see the time left.</string>
+
+    <string name="calm_onb_overlay_title">Display over other apps</string>
+    <string name="calm_onb_overlay_why">Lets the calm time\'s-up card appear over the app when a session ends, with Go home, Extend and the override.</string>
+    <string name="calm_onb_overlay_reduced">Without it: a “Time\'s up” notification appears instead, and nothing is covered.</string>
+
+    <string name="calm_onb_usage_title">Usage access</string>
+    <string name="calm_onb_usage_why">Lets the launcher check that the tracked app is really in front before showing the card, and count opens that did not go through the launcher. Only package names and times are read.</string>
+    <string name="calm_onb_usage_reduced">Without it: no card is shown; a “Time\'s up” notification appears instead.</string>
+
+    <string name="calm_onb_alarms_title">Alarms and reminders</string>
+    <string name="calm_onb_alarms_why">A backup alarm ends the session on time even if Android stops the timer. Optional.</string>
+    <string name="calm_onb_alarms_reduced">Without it: if the timer is stopped, the session closes the next time you return to the launcher.</string>
+
+    <string name="calm_onb_battery_title">Battery: Unrestricted</string>
+    <string name="calm_onb_battery_why">Keeps the session timer alive. On Samsung also set Settings → Apps → Calm Launcher → Battery → Unrestricted, and keep the app off the Sleeping apps lists.</string>
+    <string name="calm_onb_battery_reduced">Without it: the phone may stop the timer; sessions are then closed late, and the home screen says so.</string>
+
+    <string name="calm_onb_exempt_title">Apps that are never limited</string>
+    <string name="calm_onb_exempt_why">Phone, messages, maps, camera, clock and Settings are already exempt. These apps were found on your phone; keep ticked the ones that must always open straight away.</string>
+    <string name="calm_onb_exempt_reduced">You can change this any time in Screen time limits.</string>
+    <string name="calm_onb_exempt_none">None of the common messaging, banking, authenticator or transport apps were found. You can make any app exempt in Screen time limits.</string>
+    <string name="calm_onb_exempt_row">%1$s · %2$s</string>
+    <string name="calm_category_messaging">messaging</string>
+    <string name="calm_category_banking">banking and payments</string>
+    <string name="calm_category_auth">authenticator</string>
+    <string name="calm_category_transport">transport</string>
+    <string name="calm_category_system">system</string>
+</resources>

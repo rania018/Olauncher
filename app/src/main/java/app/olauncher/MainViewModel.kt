@@ -17,6 +17,7 @@ import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.NetworkType
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
+import app.calmlauncher.gate.LaunchGate
 import app.olauncher.data.AppModel
 import app.olauncher.data.Constants
 import app.olauncher.data.Prefs
@@ -73,6 +74,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
         if (appModel is AppModel.PrivateSpaceHeader) return
         when (flag) {
             Constants.FLAG_LAUNCH_APP -> {
+                if (LaunchGate.intercept(appContext, appModel)) return // Calm Launcher: "How long?" first
                 when (appModel) {
                     is AppModel.PinnedShortcut -> launchShortcut(appModel)
                     is AppModel.App ->
@@ -83,6 +85,7 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             Constants.FLAG_HIDDEN_APPS -> {
+                if (LaunchGate.intercept(appContext, appModel)) return // Calm Launcher: "How long?" first
                 if (appModel is AppModel.App) {
                     launchApp(appModel.appPackage, appModel.activityClassName, appModel.user)
                 }

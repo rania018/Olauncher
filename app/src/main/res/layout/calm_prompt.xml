@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Calm Launcher prompt: "How long?", the cooldown screen and the session sheet -->
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:fillViewport="true"
+    android:fitsSystemWindows="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_vertical"
+        android:orientation="vertical"
+        android:paddingHorizontal="32dp"
+        android:paddingVertical="48dp">
+
+        <TextView
+            android:id="@+id/promptTitle"
+            style="@style/TextLarge"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            tools:text="How long?" />
+
+        <TextView
+            android:id="@+id/promptSubtitle"
+            style="@style/TextSmall"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            tools:text="Instagram" />
+
+        <!-- DURATION: presets and a custom value -->
+        <LinearLayout
+            android:id="@+id/promptDuration"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="32dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <LinearLayout
+                android:id="@+id/promptPresets"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="-12dp"
+                android:orientation="vertical" />
+
+            <LinearLayout
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center_vertical"
+                android:orientation="horizontal">
+
+                <TextView
+                    style="@style/TextSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/calm_prompt_other" />
+
+                <EditText
+                    android:id="@+id/promptCustom"
+                    style="@style/CalmField"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="8dp"
+                    android:hint="@string/calm_prompt_other_hint"
+                    android:importantForAutofill="no"
+                    android:imeOptions="actionGo"
+                    android:inputType="number"
+                    android:maxLength="2"
+                    android:minEms="3" />
+
+                <TextView
+                    android:id="@+id/promptCustomOpen"
+                    style="@style/CalmButton"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/calm_prompt_open" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/promptCustomError"
+                style="@style/TextSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                tools:text="Enter a number from 1 to 60"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <!-- BLOCKED: the override -->
+        <LinearLayout
+            android:id="@+id/promptBlocked"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="40dp"
+            android:orientation="vertical"
+            android:visibility="gone"
+            tools:visibility="visible">
+
+            <TextView
+                android:id="@+id/promptOverride"
+                style="@style/CalmButton.Quiet"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="-12dp"
+                android:text="@string/calm_override" />
+
+            <TextView
+                android:id="@+id/promptOverrideWait"
+                style="@style/TextSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                tools:text="Wait 30 s"
+                tools:visibility="visible" />
+        </LinearLayout>
+
+        <!-- SESSION: end the running session -->
+        <TextView
+            android:id="@+id/promptEndNow"
+            style="@style/CalmButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="-12dp"
+            android:layout_marginTop="32dp"
+            android:text="@string/calm_end_now"
+            android:visibility="gone" />
+
+        <!-- The default action, always the largest: Cancel / Go home / Close -->
+        <TextView
+            android:id="@+id/promptPrimary"
+            style="@style/CalmButton.Primary"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="-12dp"
+            android:layout_marginTop="32dp"
+            tools:text="Cancel" />
+    </LinearLayout>
+</ScrollView>

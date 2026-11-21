@@ -51,7 +51,7 @@ warnings in upstream (`Extensions.kt`, `Utils.kt`, `SettingsFragment.kt`) are ex
 ```sh
 ./gradlew assembleDebug          # APK -> app/build/outputs/apk/debug/app-debug.apk
 ./gradlew test                   # JVM unit tests (no device needed)
-./gradlew :engine:test           # once the pure-Kotlin :engine module exists
+./gradlew :engine:test           # pure-Kotlin engine tests, a few seconds
 ./gradlew lint                   # optional, slow
 ./gradlew clean
 ```
@@ -66,16 +66,16 @@ Test reports: `app/build/reports/tests/testDebugUnitTest/index.html`.
    ```sh
    adb devices                                  # phone must show as "device", not "unauthorized"
    adb install -r app/build/outputs/apk/debug/app-debug.apk
-   adb shell am start -n <applicationId>.debug/app.olauncher.MainActivity
+   adb shell am start -n app.calmlauncher.debug/app.olauncher.MainActivity
    ```
-   Debug builds add the suffix `.debug` to the application ID. Upstream uses `app.olauncher.debug`, and after the planned rename it becomes `app.calmlauncher.debug`. Debug and release can be installed side by side.
+   The application ID is `app.calmlauncher`, and debug builds add the suffix `.debug`, so the debug package is `app.calmlauncher.debug`. The part after the `/` is the class name. It stays `app.olauncher.MainActivity` because the Kotlin package (`namespace`) was not renamed. Debug and release can be installed side by side.
 4. Make it the default launcher: **Settings → Apps → Choose default apps → Home app**.
 5. Wireless (optional): **Developer options → Wireless debugging**, then `adb pair <ip:port>` and `adb connect <ip:port>`.
 
 ### Logs
 ```sh
 adb logcat --pid=$(adb shell pidof -s app.calmlauncher.debug)   # only our process
-adb logcat -s CalmLauncher:*                                     # our log tag (planned)
+adb logcat -s CalmLauncher:*                                     # our log tag
 adb logcat -c                                                    # clear buffer
 ```
 
@@ -90,3 +90,40 @@ adb logcat -c                                                    # clear buffer
 - Initialized: `specify init --here --force --non-interactive --integration claude --script sh`. The `sh` scripts run in Git Bash; `ps` needs PowerShell 7 (`pwsh`), which isn't installed.
 - In Claude Code, opened in the repo root, the steps are **skills**: `/speckit-constitution`, `/speckit-specify`, `/speckit-clarify`, `/speckit-plan`, `/speckit-tasks`, `/speckit-analyze`, `/speckit-implement`. Older guides use `/speckit.specify` or `/specify`, which v1.4.3 doesn't use.
 - The constitution is at `.specify/memory/constitution.md`. Feature specs live under `specs/`.
+
+## 6. Calm Launcher on the phone
+
+### Install and set as Home
+```sh
+./gradlew assembleDebug
+adb install -r app/build/outputs/apk/debug/app-debug.apk      # installs next to upstream Olauncher
+adb shell am start -n app.calmlauncher.debug/app.olauncher.MainActivity
+```
+Then **Settings → Apps → Choose default apps → Home app → Calm Launcher**. Onboarding opens on the next
+return to the home screen; it can be reopened from **Settings (long-press home) → Screen time limits →
+Permissions status**, or by tapping the health line.
+
+### Permissions to grant
+Onboarding links to each screen. For quick test setups the same can be done over adb:
+
+| Permission | On the phone | adb shortcut (debug build) |
+|---|---|---|
+| Notifications (Android 13+) | onboarding page 1 | `adb shell pm grant app.calmlauncher.debug android.permission.POST_NOTIFICATIONS` |
+| Display over other apps | onboarding page 2 | `adb shell appops set app.calmlauncher.debug SYSTEM_ALERT_WINDOW allow` |
+| Usage access | onboarding page 3 | `adb shell appops set app.calmlauncher.debug GET_USAGE_STATS allow` |
+| Alarms & reminders (optional) | onboarding page 4 | `adb shell appops set app.calmlauncher.debug SCHEDULE_EXACT_ALARM allow` |
+| Battery unrestricted | onboarding page 5, plus One UI *Battery → Unrestricted* and off the *Sleeping apps* lists | `adb shell dumpsys deviceidle whitelist +app.calmlauncher.debug` |
+
+Revoke one (for example `... SYSTEM_ALERT_WINDOW deny`) to check the fallback and the home health line.
+
+### Keystore note
+Debug builds are signed with the per-machine debug key (`~/.android/debug.keystore`). `adb install -r`
+only works over a build signed with the same key: after switching computers, or after deleting that
+file, uninstall first (`adb uninstall app.calmlauncher.debug`), which also clears sessions, settings and
+granted permissions. Keep `debug.keystore` if you want to update the phone from more than one machine.
+No release keystore is needed for this personal, sideloaded app; never commit one (`*.jks` is ignored).
+
+### Escape hatches
+If anything ever gets in the way: pull down the notification shade and open Settings → Apps → Choose
+default apps → Home app, or `adb uninstall app.calmlauncher.debug`, or boot into Samsung safe mode.
+The device test sheet is [DEVICE_TESTS.md](DEVICE_TESTS.md).

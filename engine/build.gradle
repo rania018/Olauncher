@@ -1,0 +1,19 @@
+// :engine is a plain Kotlin/JVM module. It has no Android dependency, so the compiler itself
+// guarantees that rules and session logic never import android.* (Constitution VI, research R3).
+apply plugin: 'org.jetbrains.kotlin.jvm'
+
+kotlin {
+    jvmToolchain(17)
+}
+
+dependencies {
+    implementation libs.kotlin.stdlib
+    testImplementation libs.junit
+}
+
+test {
+    testLogging {
+        events "failed"
+        exceptionFormat "full"
+    }
+}
