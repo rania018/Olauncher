@@ -99,7 +99,18 @@ adb logcat -c                                                    # clear buffer
 adb install -r app/build/outputs/apk/debug/app-debug.apk      # installs next to upstream Olauncher
 adb shell am start -n app.calmlauncher.debug/app.olauncher.MainActivity
 ```
-Then **Settings → Apps → Choose default apps → Home app → Calm Launcher**. Onboarding opens on the next
+Then **Settings → Apps → Choose default apps → Home app → Calm Launcher**.
+
+🅢 **After every `adb install -r`, One UI may drop Calm Launcher as the Home app** and fall back to
+One UI Home (the Home role still says Calm Launcher, but the preferred Home screen is cleared). Set it
+back in one step, without touching the phone:
+```sh
+adb shell cmd package set-home-activity --user 0 app.calmlauncher.debug/app.olauncher.MainActivity
+adb shell cmd package resolve-activity --brief -a android.intent.action.MAIN -c android.intent.category.HOME | tail -1
+# expected: app.calmlauncher.debug/app.olauncher.MainActivity
+```
+
+Onboarding opens on the next
 return to the home screen; it can be reopened from **Settings (long-press home) → Screen time limits →
 Permissions status**, or by tapping the health line.
 

@@ -58,9 +58,11 @@ class ScreenTimeSettingsActivity : CalmActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         b = CalmSettingsBinding.inflate(layoutInflater)
+        // The LayoutManager must be set before inflating a view against the RecyclerView as parent:
+        // RecyclerView needs it to create the header's layout params.
+        b.calmList.layoutManager = LinearLayoutManager(this)
         header = CalmSettingsHeaderBinding.inflate(layoutInflater, b.calmList, false)
         setContentView(b.root)
-        b.calmList.layoutManager = LinearLayoutManager(this)
         b.calmList.adapter = adapter
 
         header.calmPermissions.setOnClickListener { OnboardingActivity.open(this, null) }
