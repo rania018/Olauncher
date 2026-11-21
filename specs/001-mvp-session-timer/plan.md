@@ -124,6 +124,7 @@ app/
     │   ├── data/CalmDatabase.kt, Entities.kt, Daos.kt, SettingsStore.kt, Mappers.kt
     │   ├── settings/ScreenTimeSettingsActivity.kt
     │   ├── onboarding/OnboardingActivity.kt, PermissionStatus.kt
+    │   ├── spike/SpikeActivity.kt      # TEMPORARY (T019 device check), deleted after
     │   └── util/FailOpen.kt, Log.kt
     ├── main/res/layout/calm_*.xml, values/calm_strings.xml
     ├── test/java/app/calmlauncher/...  # JVM tests for mappers, Config sanitizing

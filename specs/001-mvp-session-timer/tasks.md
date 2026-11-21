@@ -53,15 +53,15 @@ description: "Task list for the MVP session timer launcher"
   - running → `Allow(RUNNING)`
   - otherwise `AskDuration(presets, 60)`
 - [ ] T009 Implement `E/RulesEngine.kt` `decide()` with the fixed check order, wrapped in `failOpen(Allow(FAIL_OPEN))`, until T008 passes
-- [ ] T010 [P] Write failing tests in `ET/InvariantsTest.kt` for contracts/engine-api invariants 1, 2 and 3 (exempt always wins across all inputs; malformed history never throws; every `Blocked` is overridable)
+- [ ] T010 [P] Write failing tests in `ET/InvariantsTest.kt` for contracts/engine-api invariants 1, 2 and 3 (exempt always wins across all inputs; malformed history never throws; every `Blocked` is overridable), plus the `data-model.md` "State transitions" row "exception in `reduce`": `SessionMachine.reduce` never throws, keeps the state unchanged and emits only `Log(ERROR)`
 
 ### Persistence and app plumbing
 
-- [ ] T011 [P] Create Room entities in `A/data/Entities.kt` for `tracked_app`, `exempt_app`, `session`, `event_log`, enforcing `data-model.md` `exempt_app.source`, `exempt_app.category`, `session.end_reason` and `event_log.type` as Kotlin enums with type converters. First-use comment explaining Room
+- [ ] T011 [P] Create Room entities in `A/data/Entities.kt` for `tracked_app` (composite primary key per `data-model.md` `tracked_app.pkg` + `tracked_app.user_serial`, i.e. one row per app per user profile), `exempt_app`, `session`, `event_log`, enforcing `data-model.md` `exempt_app.source`, `exempt_app.category`, `session.end_reason` and `event_log.type` as Kotlin enums with type converters. First-use comment explaining Room
 - [ ] T012 Create DAOs in `A/data/Daos.kt`. `SessionDao.startSession()` runs in a transaction that guarantees at most one row with `ended_at IS NULL` (`data-model.md` `session.ended_at`). Create `A/data/CalmDatabase.kt` (`calm.db`, version 1, `exportSchema = true` into `app/schemas/`)
 - [ ] T013 [P] Create `A/data/SettingsStore.kt` (Preferences DataStore `calm_settings`; keys per data-model "Settings") returning `Config.sanitized()`. First-use comment explaining DataStore
 - [ ] T014 [P] Create `A/data/Mappers.kt` (entity ↔ engine model) plus JVM test `app/src/test/java/app/calmlauncher/data/MappersTest.kt` for the CSV presets round-trip and `userSerial` mapping
-- [ ] T015 [P] Create `A/util/FailOpen.kt` (Android wrapper that logs to `event_log` type `ERROR` and Logcat tag `CalmLauncher`) and `A/util/Log.kt`
+- [ ] T015 [P] Create `A/util/FailOpen.kt` (Android wrapper that logs to `event_log` type `ERROR` and Logcat tag `CalmLauncher`) and `A/util/Log.kt`. Every write goes through one `logEvent()` function that enforces `data-model.md` `event_log.detail`: it stores only the exception class and our own messages, never text read from other apps' screens
 - [ ] T016 Create `A/CalmGraph.kt` (lazy singletons: database, settings, repository) with a comment on why no DI framework is used
 - [ ] T017 Create `A/exempt/DefaultExemptions.kt`. It resolves dialer/SMS roles via `RoleManager` (API 29+) or `resolveActivity` fallbacks, plus `geo:`, image capture, alarms and the Settings package (research R8). It seeds `exempt_app` rows with `source = DEFAULT`. Add `A/exempt/KnownApps.kt` (suggestion list for messaging, banking, auth and transport by package name)
 - [ ] T018 Add the upstream hook skeletons and run them as no-ops:
@@ -163,8 +163,8 @@ description: "Task list for the MVP session timer launcher"
   - Running/Warning → Expired
   - `ForegroundIsOther` / `ForegroundUnknown` → end quietly
   - `WentHome` / `CardTimedOut` → Cooldown or Idle
-  - `Extended` only while extensions < 2 (invariant 5)
-  - `OverrideCompleted` → 5-min session with `Log(OVERRIDE)`
+  - `Extended` only while extensions < `data-model.md` `Config.maxExtensions` (2; invariant 5), and only after `data-model.md` `Config.extensionWaitSec` has elapsed
+  - `OverrideCompleted` → session of `data-model.md` `Config.overrideGrantMin` (5 min) with `Log(OVERRIDE)`
 - [ ] T041 [P] [US3] Add failing tests in `ET/CooldownTest.kt`:
   - cooldown only after `EXPIRED` (`data-model.md` `session.end_reason`)
   - `cooldownMin = 0` disables it
@@ -174,8 +174,8 @@ description: "Task list for the MVP session timer launcher"
 - [ ] T043 [US3] Create `A/enforce/ForegroundProbe.kt`, a one-shot `UsageStatsManager.queryEvents` for the last 10 min that returns the last resumed package or `null`, with one retry after 2 s (research R6). Comment explaining UsageStatsManager
 - [ ] T044 [US3] Create `A/enforce/GoHome.kt` (HOME intent; research R5) and `A/enforce/OverlayController.kt`. The overlay is full-screen and opaque (`TYPE_APPLICATION_OVERLAY`), with focus and Back handling. It contains:
   - Go home (default)
-  - Extend: a 15 s visible countdown, then +2/+5, hidden after 2 extensions
-  - "I really need this": a 30 s countdown that resets on visibility loss, then +5 min
+  - Extend: a visible countdown of `data-model.md` `Config.extensionWaitSec` (15 s), then +2/+5 (`data-model.md` `Config.extensionOptionsMin`), hidden after `data-model.md` `Config.maxExtensions` (2) extensions
+  - "I really need this": a countdown of `data-model.md` `Config.overrideWaitSec` (30 s, never below 10) that resets on visibility loss, then `data-model.md` `Config.overrideGrantMin` (5 min)
 
   It removes itself after 120 s (`data-model.md` `Config.cardTimeoutSec`, logged as `OVERLAY_TIMEOUT`). Add the `SYSTEM_ALERT_WINDOW` manifest permission and a comment explaining overlay windows and ⚠️ the Android 12+ touch rules
 - [ ] T045 [US3] Fallback when the overlay permission is missing: in `A/session/Notifications.kt`, post a high-priority `calm_expiry` notification whose tap goes home (spec edge case)
@@ -216,8 +216,9 @@ description: "Task list for the MVP session timer launcher"
   - a future deadline means continue and reschedule
   - a past deadline means `EndSession(EXPIRED, at = deadline)` with no UI effect (invariant 6)
   - a past deadline also starts the cooldown from the deadline
+  - `AppUninstalled(key)` from any state → Idle with `EndSession(INTERRUPTED)` (`data-model.md` "State transitions"; spec edge case "tracked app uninstalled")
 - [ ] T056 [US5] Implement `Reconcile` in `E/SessionMachine.kt` until T055 passes
-- [ ] T057 [US5] Create `A/session/BootReceiver.kt` (`RECEIVE_BOOT_COMPLETED`, manifest entry) that calls `SessionRepository.reconcile(now)` and restarts `SessionService` if a session is still active. Comment explaining BroadcastReceivers and 🅢 boot delays on One UI
+- [ ] T057 [US5] Create `A/session/BootReceiver.kt` (`RECEIVE_BOOT_COMPLETED`, manifest entry) that calls `SessionRepository.reconcile(now)` and restarts `SessionService` if a session is still active. While a session runs, `SessionService` also registers receivers for `ACTION_TIME_CHANGED` and `ACTION_TIMEZONE_CHANGED` that call reconcile and reschedule the callbacks (spec edge case "system clock changed"). `ACTION_PACKAGE_REMOVED` for the session's app feeds `AppUninstalled`. Comment explaining BroadcastReceivers and 🅢 boot delays on One UI
 - [ ] T058 [US5] Create `A/session/SessionAlarmReceiver.kt`, plus an exact-alarm backup at the deadline when `canScheduleExactAlarms()`. Add the `SCHEDULE_EXACT_ALARM` manifest permission, and call reconcile from `CalmHooks.onLauncherResumed`. Comment explaining AlarmManager and ⚠️ Android 12/14 exact-alarm rules
 - [ ] T059 [US5] On reconcile of a session whose timer evidently did not run (deadline passed > 60 s before any callback), log `SERVICE_INTERRUPTED` and show the health line "Timer was interrupted, check battery settings" once
 - [ ] T060 [US5] Device check: quickstart §3 rows 9, 10 and 11
