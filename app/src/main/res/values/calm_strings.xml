@@ -49,30 +49,86 @@
     <string name="calm_card_extend_option">+%1$d min</string>
 
     <!-- Screen time settings -->
-    <string name="calm_settings_hint">Tracked apps ask “How long?” before they open from this launcher. Exempt apps always open straight away, even if tracked.</string>
+    <string name="calm_settings_hint">Tracked apps ask “How long?” before they open from this launcher. Exempt apps are never limited. Changes are saved straight away.</string>
+    <string name="calm_settings_permissions">Permissions and setup</string>
+    <string name="calm_settings_permissions_ok">All set</string>
+    <plurals name="calm_settings_permissions_missing">
+        <item quantity="one">1 permission is missing. Tap to fix.</item>
+        <item quantity="other">%1$d permissions are missing. Tap to fix.</item>
+    </plurals>
+
     <string name="calm_settings_defaults">Sessions</string>
-    <string name="calm_settings_presets">Session lengths (minutes)</string>
-    <string name="calm_settings_cooldown">Cooldown after time\'s up (minutes, 0 = off)</string>
-    <string name="calm_settings_warning">Warning before the end (seconds, 0 = off)</string>
-    <string name="calm_settings_extension_wait">Wait before extending (seconds)</string>
-    <string name="calm_settings_apply_note">Session lengths and cooldown apply to every tracked app. Long-press a tracked app to set its own.</string>
-    <string name="calm_settings_save">Save</string>
-    <string name="calm_settings_saved">Saved</string>
+    <string name="calm_settings_presets">Session lengths</string>
+    <string name="calm_settings_presets_hint">Offered when a tracked app opens. Tap one to remove it.</string>
+    <string name="calm_preset_chip">%1$d min  ✕</string>
+    <string name="calm_preset_remove">Remove %1$d minutes</string>
+    <string name="calm_preset_add">+ Add</string>
+    <string name="calm_preset_add_title">Add a session length</string>
+    <string name="calm_preset_add_ok">Add</string>
+    <string name="calm_preset_keep_one">Keep at least one session length.</string>
+    <string name="calm_preset_invalid">Use a whole number of minutes from 1 to 60 that is not in the list yet.</string>
+    <string name="calm_settings_cooldown">Cooldown after time\'s up</string>
+    <string name="calm_settings_cooldown_hint">The app stays closed this long</string>
+    <string name="calm_settings_warning">Warning before the end</string>
+    <string name="calm_settings_warning_hint">The timer turns amber and a notification comes</string>
+    <string name="calm_settings_extension_wait">Wait before more time</string>
+    <string name="calm_settings_extension_wait_hint">A pause before you can add minutes</string>
+    <string name="calm_settings_apply_note">These apply to every tracked app. Tap a tracked app below to give it its own.</string>
+    <string name="calm_step_minus">−</string>
+    <string name="calm_step_plus">+</string>
+    <string name="calm_step_less">%1$s: less</string>
+    <string name="calm_step_more">%1$s: more</string>
+    <string name="calm_value_off">Off</string>
+    <string name="calm_value_none">None</string>
+    <string name="calm_seconds_short">%1$d s</string>
+    <string name="calm_minutes_seconds_short">%1$d min %2$d s</string>
+
+    <string name="calm_settings_time_left">Time left on screen</string>
+    <string name="calm_time_left_pill">Pill</string>
+    <string name="calm_time_left_bar">Bar</string>
+    <string name="calm_time_left_off">Off</string>
+    <string name="calm_time_left_pill_hint">A timer in the top corner with a ring that empties. Drag it aside, or tap it to end the session. It turns amber when the warning starts.</string>
+    <string name="calm_time_left_bar_hint">A coloured line under the status bar that shrinks as time runs out. Touches go through it. It turns amber when the warning starts.</string>
+    <string name="calm_time_left_off_hint">Nothing on screen. The countdown stays in the notification.</string>
+    <string name="calm_time_left_pill_text">%1$s left</string>
+
+    <string name="calm_settings_accent">Accent colour</string>
+    <string name="calm_settings_accent_hint">Used for Calm Launcher\'s buttons, timers and pop-ups. Phone\'s colour follows your phone\'s palette (Wallpaper and style → Color palette). Home screen text stays black or white so it reads on any wallpaper.</string>
+    <string name="calm_accent_phone">Phone\'s colour</string>
+    <string name="calm_accent_teal">Teal</string>
+    <string name="calm_accent_blue">Blue</string>
+    <string name="calm_accent_purple">Purple</string>
+    <string name="calm_accent_pink">Pink</string>
+    <string name="calm_accent_orange">Orange</string>
+    <string name="calm_accent_green">Green</string>
+    <string name="calm_accent_mono">Black and white</string>
+
     <string name="calm_settings_apps">Apps</string>
     <string name="calm_settings_search">Search apps</string>
-    <string name="calm_settings_tracked">track</string>
-    <string name="calm_settings_exempt">exempt</string>
-    <string name="calm_settings_permissions">Permissions status</string>
-    <string name="calm_settings_invalid_presets">Use whole minutes from 1 to 60, separated by commas.</string>
+    <string name="calm_settings_apps_hint">Tracked apps are listed first. An app is either tracked or exempt, not both.</string>
+    <string name="calm_settings_track_box">Track</string>
+    <string name="calm_settings_exempt_box">Exempt</string>
+    <string name="calm_row_status_tracked">%1$s min · %2$s</string>
+    <string name="calm_row_cooldown">%1$d min cooldown</string>
+    <string name="calm_row_no_cooldown">no cooldown</string>
+    <string name="calm_row_status_system">Always allowed</string>
+    <string name="calm_row_status_default">Exempt by default</string>
+    <string name="calm_row_status_exempt">Never limited</string>
+    <string name="calm_no_longer_exempt">%1$s is no longer exempt</string>
+    <string name="calm_track_default_title">Track an exempt app?</string>
+    <string name="calm_settings_save">Save</string>
+    <string name="calm_use_defaults">Use defaults</string>
     <string name="calm_settings_work_suffix">%1$s (work)</string>
     <string name="calm_settings_other_profile_suffix">%1$s (profile %2$d)</string>
     <string name="calm_remove_default_title">Remove from exempt apps?</string>
     <string name="calm_remove_default_message">%1$s is exempt by default. If you remove it, it will follow your tracking rules (prompt, timer and cooldown) whenever it is tracked.</string>
     <string name="calm_remove">Remove</string>
     <string name="calm_always_exempt">Phone, messages and Settings are always exempt.</string>
-    <string name="calm_per_app_title">%1$s</string>
-    <string name="calm_per_app_presets">Session lengths (minutes)</string>
-    <string name="calm_per_app_cooldown">Cooldown (minutes, 0 = off)</string>
+
+    <!-- App limits accessibility service (research R13) -->
+    <string name="calm_access_label">Calm Launcher app limits</string>
+    <string name="calm_access_summary">Asks “How long?” for tracked apps however they are opened</string>
+    <string name="calm_access_description">Lets Calm Launcher see which app comes to the front, so a tracked app opened from the recent-apps list, a link or a notification asks “How long?” first, and a session ends when you leave its app. It only learns the name of the app in front. It never reads what is on screen.</string>
 
     <!-- Onboarding -->
     <string name="calm_onb_step">%1$d of %2$d</string>

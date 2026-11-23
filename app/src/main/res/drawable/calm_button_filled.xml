@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Calm Launcher filled button: the main action of a screen, in the accent colour -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/calmOnAccent">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="24dp" />
+            <solid android:color="?attr/calmAccent" />
+        </shape>
+    </item>
+</ripple>

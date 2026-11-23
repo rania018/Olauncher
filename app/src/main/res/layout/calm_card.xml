@@ -1,93 +1,104 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Calm Launcher time's-up card, drawn as a full-screen opaque overlay (contracts/ui-surfaces.md) -->
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+<!-- Calm Launcher time's-up card (contracts/ui-surfaces.md): a pop-up in upstream's dialog style,
+     with the accent colour on its buttons (FR-030), over the dimmed app. The scrim takes every touch, so the app stays visible but cannot be used. -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/calmCardScrim"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="?attr/primaryInverseColor"
-    android:fillViewport="true">
+    android:background="#99000000"
+    android:clickable="true"
+    android:focusable="false"
+    android:soundEffectsEnabled="false">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:gravity="center_vertical"
-        android:orientation="vertical"
-        android:paddingHorizontal="32dp"
-        android:paddingVertical="64dp">
-
-        <TextView
-            android:id="@+id/calmCardTitle"
-            style="@style/TextLarge"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/calm_card_title" />
-
-        <TextView
-            android:id="@+id/calmCardSubtitle"
-            style="@style/TextSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="8dp"
-            tools:text="5 min in Instagram" />
-
-        <TextView
-            android:id="@+id/calmCardHome"
-            style="@style/CalmButton.Primary"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="-12dp"
-            android:layout_marginTop="48dp"
-            android:text="@string/calm_go_home" />
-
-        <TextView
-            android:id="@+id/calmCardExtend"
-            style="@style/CalmButton"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="-12dp"
-            android:layout_marginTop="16dp"
-            android:text="@string/calm_card_extend" />
+        android:layout_gravity="center"
+        android:layout_margin="24dp">
 
         <LinearLayout
-            android:id="@+id/calmCardExtendRow"
-            android:layout_width="wrap_content"
+            android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:background="@drawable/rounded_rectangle_dark"
+            android:clickable="true"
             android:orientation="vertical"
-            android:visibility="gone"
-            tools:visibility="visible">
+            android:paddingHorizontal="28dp"
+            android:paddingVertical="28dp"
+            android:soundEffectsEnabled="false">
 
             <TextView
-                android:id="@+id/calmCardExtendWait"
+                android:id="@+id/calmCardTitle"
+                style="@style/TextLarge"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/calm_card_title" />
+
+            <TextView
+                android:id="@+id/calmCardSubtitle"
                 style="@style/TextSmall"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                tools:text="Available in 15 s" />
+                android:layout_marginTop="8dp"
+                tools:text="5 min in Instagram" />
+
+            <TextView
+                android:id="@+id/calmCardHome"
+                style="@style/CalmButton.Filled"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="28dp"
+                android:minHeight="56dp"
+                android:text="@string/calm_go_home" />
+
+            <TextView
+                android:id="@+id/calmCardExtend"
+                style="@style/CalmButton.Outlined"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="12dp"
+                android:text="@string/calm_card_extend" />
 
             <LinearLayout
-                android:id="@+id/calmCardExtendOptions"
+                android:id="@+id/calmCardExtendRow"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:orientation="vertical"
+                android:visibility="gone"
+                tools:visibility="visible">
+
+                <TextView
+                    android:id="@+id/calmCardExtendWait"
+                    style="@style/TextSmall"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    tools:text="Available in 15 s" />
+
+                <app.calmlauncher.ui.FlowLayout
+                    android:id="@+id/calmCardExtendOptions"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp" />
+            </LinearLayout>
+
+            <TextView
+                android:id="@+id/calmCardOverride"
+                style="@style/CalmButton.Quiet"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_marginStart="-12dp"
-                android:orientation="horizontal" />
+                android:layout_marginTop="20dp"
+                android:text="@string/calm_override" />
+
+            <TextView
+                android:id="@+id/calmCardOverrideWait"
+                style="@style/TextSmall"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                tools:text="Wait 30 s"
+                tools:visibility="visible" />
         </LinearLayout>
-
-        <TextView
-            android:id="@+id/calmCardOverride"
-            style="@style/CalmButton.Quiet"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="-12dp"
-            android:layout_marginTop="40dp"
-            android:text="@string/calm_override" />
-
-        <TextView
-            android:id="@+id/calmCardOverrideWait"
-            style="@style/TextSmall"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:visibility="gone"
-            tools:text="Wait 30 s"
-            tools:visibility="visible" />
-    </LinearLayout>
-</ScrollView>
+    </ScrollView>
+</FrameLayout>

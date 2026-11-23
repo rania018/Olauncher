@@ -2,4 +2,20 @@
 <resources>
     <color name="calm_background">#000000</color>
     <color name="calm_prompt_scrim">#F2000000</color>
+
+    <!-- Accent colours, dark theme: light shades with black text on them -->
+    <color name="calm_accent_phone">#4DB6AC</color>
+    <color name="calm_accent_teal">#4DB6AC</color>
+    <color name="calm_accent_blue">#8AB4F8</color>
+    <color name="calm_accent_purple">#B39DDB</color>
+    <color name="calm_accent_pink">#F48FB1</color>
+    <color name="calm_accent_orange">#FFAB70</color>
+    <color name="calm_accent_green">#81C784</color>
+    <color name="calm_accent_mono">#FFFFFF</color>
+    <color name="calm_on_accent">#000000</color>
+
+    <color name="calm_warn">#FFC940</color>
+    <color name="calm_on_warn">#000000</color>
+
+    <color name="calm_bar_track">#59000000</color>
 </resources>

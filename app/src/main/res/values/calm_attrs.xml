@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Calm Launcher accent colour (spec FR-030). Set by one of the CalmAccent.* theme overlays,
+         which CalmActivity and CalmActivity.themedContext apply from the user's choice. -->
+    <attr name="calmAccent" format="color" />
+    <!-- Text and icons drawn on top of the accent colour -->
+    <attr name="calmOnAccent" format="color" />
+</resources>

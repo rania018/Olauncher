@@ -1,12 +1,20 @@
 <!--
 Sync Impact Report
-- Version change: template → 1.0.0 (initial ratification)
-- Principles added: I. Privacy First; II. Fail Open; III. Effortful but Always-Available Override;
-  IV. Minimal, Calm UI; V. Battery-Light and Event-Driven; VI. Testable Pure-Kotlin Core;
-  VII. Upstream Isolation; VIII. Simple, Explained Kotlin
-- Sections added: Platform & Distribution Constraints; Development Workflow & Quality Gates
+- Version change: 1.0.0 → 1.1.0 (MINOR: Principle IV materially expanded; work that complied
+  with 1.0.0 still complies, so no backward-incompatible redefinition)
+- Modified principles: IV. Minimal, Calm UI (title unchanged): Calm Launcher's own screens may now
+  use one user-chosen accent colour and show an app's icon where it identifies the app; the home
+  screen and upstream screens stay text-only; time reminders must stay visible over light and dark
+  apps; a black-and-white choice must always exist. Added a rationale.
+- Added sections: none
 - Removed sections: none
 - Templates: plan/spec/tasks templates read this file at runtime; no template edits needed
+- Follow-ups for feature 001:
+  - plan.md Complexity Tracking: the "accent colour … icons" exception row is no longer an
+    exception and should be removed at the next /speckit-plan.
+  - The pill's grow-and-settle pulse at the warning (TimeLeftOverlay.pulse) is a custom animation
+    and still conflicts with "no animations beyond what Android provides": remove it in the next
+    tasks, or amend again.
 - Deferred TODOs: none
 -->
 # Calm Launcher Constitution
@@ -54,10 +62,22 @@ no tool at all.
 Rationale: friction changes habits; impossibility causes the owner to uninstall the app.
 
 ### IV. Minimal, Calm UI
-- The UI is text-first: no app icons, badges, notification counts or colour accents by default.
+- The UI is text-first. The home screen and upstream Olauncher screens stay text-only: no app
+  icons, badges, notification counts or colour accents there.
+- Calm Launcher's own screens (prompts, settings, onboarding, the time-left reminder, the time's-up
+  card, its notifications) MAY use one accent colour chosen by the user, and MAY show an app's icon
+  where it identifies the app the screen is about. Badges and notification counts are not allowed
+  anywhere.
+- A black-and-white accent choice, which restores the text-only look, MUST always be available.
+- Time-left and warning reminders MUST stay clearly visible over both light and dark apps.
 - Prompts and enforcement screens use plain, neutral, non-shaming language and no animations
   beyond what Android provides.
-- New screens MUST reuse the upstream Olauncher look (fonts, theme attributes, text sizes).
+- New screens MUST reuse the upstream Olauncher look (fonts, theme attributes, text sizes) and add
+  only the accent colour on top.
+
+Rationale: on the phone, text-only reminders were easy to miss and the settings did not read as
+editable (owner feedback, 2026-11-21). Colour and icons are kept to Calm Launcher's own screens,
+so the home screen stays calm.
 
 ### V. Battery-Light and Event-Driven
 - Polling loops MUST NOT be used where an event source exists (accessibility window events,
@@ -119,4 +139,4 @@ Rationale: friction changes habits; impossibility causes the owner to uninstall 
 - Principle II (Fail Open) and Principle III (Override) MUST NOT be weakened by amendment
   without a written rationale in the Sync Impact Report.
 
-**Version**: 1.0.0 | **Ratified**: 2026-11-21 | **Last Amended**: 2026-11-21
+**Version**: 1.1.0 | **Ratified**: 2026-11-21 | **Last Amended**: 2026-11-21

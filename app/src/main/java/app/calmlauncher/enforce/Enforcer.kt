@@ -10,7 +10,8 @@ import app.calmlauncher.util.logEvent
 
 /**
  * Carries out the engine's warning and expiry effects, always through [ShowGate] (T052): never
- * over an exempt app, never during a call or over the lock screen, never in a loop. Every
+ * over an exempt app, never over a call or the lock screen, never in a loop. During a running
+ * call the card shows only when the tracked app itself is in front (see [CallGuard]). Every
  * outcome is reported back to the session as an event, posted so it never re-enters dispatch.
  */
 object Enforcer {
@@ -20,17 +21,25 @@ object Enforcer {
 
     private val repo get() = CalmGraph.repository
 
-    private fun gate(context: Context, pkg: String, isEnforcement: Boolean): ShowGate.Verdict {
+    /**
+     * [anyCallBlocks] = false: a running call does not block while [pkg] is in front (the card).
+     * true: every call blocks (the warning, which would make a sound in the call).
+     */
+    private fun gate(context: Context, pkg: String, isEnforcement: Boolean, anyCallBlocks: Boolean = false): ShowGate.Verdict {
         val now = System.currentTimeMillis()
         val wasPaused = loopGuard.isPaused(pkg, now)
-        val verdict = ShowGate.check(pkg, CallGuard.guardState(context), repo::isExempt, loopGuard, now, isEnforcement)
+        val guard = CallGuard.guardState(context, if (anyCallBlocks) null else pkg)
+        val verdict = ShowGate.check(pkg, guard, repo::isExempt, loopGuard, now, isEnforcement)
         if (!wasPaused && loopGuard.isPaused(pkg, now)) logEvent(EventType.LOOP_GUARD, pkg)
         return verdict
     }
 
-    /** The heads-up warning. Skipped, not delayed, during a call or on the lock screen. */
+    /**
+     * The heads-up warning. Skipped, not delayed, during any call or on the lock screen; during a
+     * call the reminder turning amber is the cue.
+     */
     fun warn(context: Context, rec: SessionRecord) {
-        if (gate(context, rec.key.pkg, isEnforcement = false) != ShowGate.Verdict.SHOW) return
+        if (gate(context, rec.key.pkg, isEnforcement = false, anyCallBlocks = true) != ShowGate.Verdict.SHOW) return
         Notifications.showWarning(context, rec, repo.config.warningLeadSec)
     }
 

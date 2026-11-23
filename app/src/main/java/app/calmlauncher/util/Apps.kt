@@ -2,6 +2,7 @@ package app.calmlauncher.util
 
 import android.content.Context
 import android.content.pm.LauncherApps
+import android.graphics.drawable.Drawable
 import android.os.Process
 import android.os.SystemClock
 import android.os.UserHandle
@@ -40,6 +41,13 @@ object Apps {
             }.getOrNull()
             ?: key.pkg
     }
+
+    /** The app's icon (with the work badge for work apps), or null if it cannot be loaded. */
+    fun icon(context: Context, key: AppKey): Drawable? = runCatching {
+        val user = userOf(context, key.userSerial) ?: Process.myUserHandle()
+        context.getSystemService(LauncherApps::class.java)
+            .getActivityList(key.pkg, user).firstOrNull()?.getBadgedIcon(0)
+    }.getOrNull()
 
     /** Wall-clock time of the last boot. */
     fun bootedAt(): Long = System.currentTimeMillis() - SystemClock.elapsedRealtime()

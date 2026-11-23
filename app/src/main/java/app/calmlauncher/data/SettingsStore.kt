@@ -33,6 +33,8 @@ class SettingsStore(context: Context) {
         val onboardingVersion: Int,
         val healthNotice: HealthNotice?,
         val removedDefaults: Set<String>,
+        /** "PILL", "BAR" or "OFF"; read with TimeLeft.Display.parse (spec FR-029). */
+        val timeLeftDisplay: String? = null,
     )
 
     /** A one-off notice for the home health line, such as "the timer was interrupted". */
@@ -68,7 +70,7 @@ class SettingsStore(context: Context) {
         val notice = p[Keys.LAST_HEALTH_NOTICE]?.let { decodeNotice(it) }
         val removed = p[Keys.REMOVED_DEFAULT_EXEMPT].orEmpty()
             .split(',').map { it.trim() }.filter { it.isNotEmpty() }.toSet()
-        return Snapshot(config, presets, cooldown, p[Keys.ONBOARDING_VERSION] ?: 0, notice, removed)
+        return Snapshot(config, presets, cooldown, p[Keys.ONBOARDING_VERSION] ?: 0, notice, removed, p[Keys.TIME_LEFT_DISPLAY])
     }
 
     object Keys {
@@ -83,6 +85,7 @@ class SettingsStore(context: Context) {
         val LAST_HEALTH_NOTICE = stringPreferencesKey("last_health_notice")
         val REMOVED_DEFAULT_EXEMPT = stringPreferencesKey("removed_default_exempt")
         val LAST_LAUNCHER_RESUME = longPreferencesKey("last_launcher_resume")
+        val TIME_LEFT_DISPLAY = stringPreferencesKey("time_left_display")
     }
 
     companion object {

@@ -14,17 +14,19 @@ object UnplannedOpens {
     const val SLACK_MS = 10_000L
 
     /**
-     * Returns the opens of [trackedPkgs] in [resumes] that no session in [sessions] covers.
-     * Several resumes of the same app in a row (one app, several screens) count as one open.
-     * Sessions still running are treated as lasting until [now].
+     * Returns the opens in [resumes] of tracked apps that no session in [sessions] covers.
+     * [trackedSince] maps each tracked package to the time it became tracked; earlier opens do
+     * not count. Several resumes of the same app in a row (one app, several screens) count as one
+     * open. Sessions still running are treated as lasting until [now].
      */
-    fun find(resumes: List<Resume>, trackedPkgs: Set<String>, sessions: List<SessionRecord>, now: Long): List<Resume> {
+    fun find(resumes: List<Resume>, trackedSince: Map<String, Long>, sessions: List<SessionRecord>, now: Long): List<Resume> {
         val result = mutableListOf<Resume>()
         var previousPkg: String? = null
         for (r in resumes.sortedBy { it.at }) {
             val isNewOpen = r.pkg != previousPkg
             previousPkg = r.pkg
-            if (!isNewOpen || r.pkg !in trackedPkgs) continue
+            val since = trackedSince[r.pkg] ?: continue
+            if (!isNewOpen || r.at < since) continue
             val covered = sessions.any { s ->
                 s.key.pkg == r.pkg && r.at >= s.startedAt - SLACK_MS && r.at <= (s.endedAt ?: now) + SLACK_MS
             }

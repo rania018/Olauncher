@@ -3,4 +3,24 @@
 <resources>
     <color name="calm_background">#FFFFFF</color>
     <color name="calm_prompt_scrim">#F2FFFFFF</color>
+
+    <!-- Accent colours (spec FR-030). The light theme uses deep shades so white text reads on them;
+         values-night has light shades with black text. "Phone" is the system palette on Android 12+
+         (values-v31); before that it falls back to teal. -->
+    <color name="calm_accent_phone">#00796B</color>
+    <color name="calm_accent_teal">#00796B</color>
+    <color name="calm_accent_blue">#1E5EDB</color>
+    <color name="calm_accent_purple">#6A4FC0</color>
+    <color name="calm_accent_pink">#C2185B</color>
+    <color name="calm_accent_orange">#C94F00</color>
+    <color name="calm_accent_green">#2E7D32</color>
+    <color name="calm_accent_mono">#000000</color>
+    <color name="calm_on_accent">#FFFFFF</color>
+
+    <!-- The last part of a session (from the warning on): amber, whatever the accent -->
+    <color name="calm_warn">#F2A900</color>
+    <color name="calm_on_warn">#000000</color>
+
+    <!-- Behind the time-left bar, so its full length shows over white apps too -->
+    <color name="calm_bar_track">#59000000</color>
 </resources>

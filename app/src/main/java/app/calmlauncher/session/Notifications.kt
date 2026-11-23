@@ -12,6 +12,7 @@ import androidx.core.app.NotificationManagerCompat
 import app.calmlauncher.engine.SessionRecord
 import app.calmlauncher.enforce.GoHome
 import app.calmlauncher.prompt.PromptActivity
+import app.calmlauncher.ui.CalmLook
 import app.calmlauncher.util.Apps
 import app.calmlauncher.util.CalmLog
 import app.olauncher.R
@@ -68,6 +69,7 @@ object Notifications {
         ensureChannels(context)
         val builder = NotificationCompat.Builder(context, CHANNEL_SESSION)
             .setSmallIcon(R.drawable.calm_ic_timer)
+            .setColor(CalmLook.accentColor(context))
             .setOngoing(true)
             .setOnlyAlertOnce(true)
             .setSilent(true)
@@ -100,6 +102,7 @@ object Notifications {
         }
         val n = NotificationCompat.Builder(context, CHANNEL_WARNING)
             .setSmallIcon(R.drawable.calm_ic_timer)
+            .setColor(CalmLook.accentColor(context))
             .setContentTitle(text)
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setCategory(NotificationCompat.CATEGORY_REMINDER)
@@ -114,6 +117,7 @@ object Notifications {
         ensureChannels(context)
         val n = NotificationCompat.Builder(context, CHANNEL_EXPIRY)
             .setSmallIcon(R.drawable.calm_ic_timer)
+            .setColor(CalmLook.accentColor(context))
             .setContentTitle(context.getString(R.string.calm_expiry_title, Apps.label(context, rec.key)))
             .setContentText(context.getString(R.string.calm_expiry_text))
             .setContentIntent(GoHome.pendingIntent(context))

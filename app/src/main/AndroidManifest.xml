@@ -120,6 +120,21 @@
             android:exported="false"
             android:theme="@style/CalmTheme" />
 
+        <!-- Calm Launcher: app limits. Tells us which app comes to the front (research R13);
+             never reads screen content. Separate from upstream's double-tap-to-lock service. -->
+        <service
+            android:name="app.calmlauncher.access.CalmAccessibilityService"
+            android:exported="false"
+            android:label="@string/calm_access_label"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/calm_accessibility_config" />
+        </service>
+
         <!-- Calm Launcher: runs only while a session is active -->
         <service
             android:name="app.calmlauncher.session.SessionService"

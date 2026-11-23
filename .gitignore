@@ -21,3 +21,6 @@ google-services.json
 .kotlin/
 # Claude Code local settings (may contain machine-specific data)
 .claude/settings.local.json
+# Editor settings and logs (Spec Kit implement check)
+.vscode/
+*.log

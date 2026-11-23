@@ -16,6 +16,9 @@ interface TrackedAppDao {
     @Query("SELECT * FROM tracked_app")
     fun all(): List<TrackedAppEntity>
 
+    @Query("SELECT * FROM tracked_app WHERE pkg = :pkg AND user_serial = :userSerial")
+    fun get(pkg: String, userSerial: Long): TrackedAppEntity?
+
     @Upsert
     fun upsert(app: TrackedAppEntity)
 

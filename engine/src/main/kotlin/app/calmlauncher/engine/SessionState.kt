@@ -24,6 +24,7 @@ sealed interface SessionState {
         val previous: SessionState,
         val blockedUntil: Long? = null,
         val overrideStartedAt: Long? = null,
+        val source: LaunchSource = LaunchSource.LAUNCHER,
     ) : SessionState {
         val isBlocked: Boolean get() = blockedUntil != null
     }
@@ -75,6 +76,14 @@ val SessionState.activeRecord: SessionRecord?
         else -> null
     }
 
+/**
+ * How a tracked app was opened (data-model.md `LaunchSource`, research R15).
+ * - [LAUNCHER]: from our launcher, which asks before the app opens.
+ * - [OUTSIDE]: the app came to the front another way (recent-apps list, link, notification) and the
+ *   accessibility service saw it. It is already on screen, so the engine never relaunches it.
+ */
+enum class LaunchSource { LAUNCHER, OUTSIDE }
+
 /** Things that happen. Time is not part of an event: it is passed to [SessionMachine.reduce]. */
 sealed interface SessionEvent {
     /** The user opened [key] from the launcher, and the rules engine said [decision]. */
@@ -82,6 +91,7 @@ sealed interface SessionEvent {
         val key: AppKey,
         val decision: Decision,
         val cooldownMin: Int = TrackedApp.DEFAULT_COOLDOWN_MIN,
+        val source: LaunchSource = LaunchSource.LAUNCHER,
     ) : SessionEvent
 
     /** The prompt was closed with Cancel, Back or "Go home". */

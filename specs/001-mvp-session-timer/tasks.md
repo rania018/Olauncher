@@ -286,13 +286,15 @@ T011 Entities.kt  |  T013 SettingsStore.kt  |  T014 Mappers.kt  |  T015 util/Fai
 1. **MVP first:** Phases 1–7 (through US4) give a safe, usable daily build. Stop and use it for a few days before Phases 8–9.
 2. **Incremental delivery:** each phase ends with a device check and a commit. Every phase leaves the launcher fully usable, and a feature that is not yet wired fails open.
 3. **Baseline week:** after Phase 3 (US7), install the build with tracking enabled but no tracked apps. This collects 7 days of UsageStats baseline (PRODUCT_REQUIREMENTS §5) while Phases 4+ are built.
-4. **Out of scope for this task list:** accessibility-based interception, schedules, caps, launch delay, intent prompts, delayed loosening, stats screen and content filtering (Phase 2/3 roadmap).
+4. **Out of scope for this task list:** schedules, caps, launch delay, intent prompts, delayed loosening, stats screen and content filtering (Phase 2/3 roadmap). Accessibility-based interception was brought into scope by the third device test (Phase 13).
 
 ---
 
 ## Implementation status (2026-11-21)
 
-All code tasks are done; the build, `./gradlew :engine:test` (97 tests) and `./gradlew test` are green, and
+**Current (after the third device test):** Phases 1–12 are built and approved; 162 JVM tests (engine and app) pass. Phase 13 (T083–T104) is written and awaits owner approval; device checks T076, T082 and the Phase 13 checks are open. The paragraphs below describe the state after Phase 10.
+
+After Phase 10, all code tasks were done; the build, `./gradlew :engine:test` (97 tests) and `./gradlew test` are green, and
 the merged manifest has no network permission. The open tasks all need the Samsung phone (none was
 attached), and are tracked in `docs/DEVICE_TESTS.md`:
 
@@ -313,3 +315,158 @@ Notes on how tasks were done:
 - T065: the unplanned-open matching is a pure engine function (`UnplannedOpens`) with its own tests.
 - Spec documents updated where implementation refined them: data-model state table, engine-api contract,
   ui-surfaces, research R7/R8, plan Complexity Tracking, TECHNICAL_DESIGN §2.
+
+---
+
+## Phase 11: Owner feedback after the first device run (2026-11-21)
+
+**Owner approval**: reviewed and approved by the owner on 2026-11-21, after implementation (built before approval; analysis D1). Device check T076 still open.
+
+**Input**: owner analysis after using the build on the Samsung; decisions recorded in spec.md Clarifications
+("owner feedback after the first run on the phone"), FR-004, FR-010/FR-029, FR-012 and ui-surfaces.md.
+
+- [X] T070 [P] Engine: unplanned opens count only after the app became tracked. Failing test first in `ET/UnplannedOpensTest.kt`, then `UnplannedOpens.find` takes `trackedSince: Map<String, Long>`
+- [X] T071 [P] Pure time-left logic in `A/session/TimeLeft.kt` (label "4 min" / "0:42", bar fraction, next refresh delay) with JVM test `app/src/test/java/app/calmlauncher/session/TimeLeftTest.kt`
+- [X] T072 [P] Tracked and exempt exclusive: pure rule in `A/exempt/ExemptRules.kt` + JVM test; `SessionRepository` removes tracked rows of exempt packages at load and whenever exemptions change; `setTracked` refuses SYSTEM exemptions
+- [X] T073 Settings readability in `A/settings/ScreenTimeSettingsActivity.kt` and layouts: visible input lines, outlined Save, Track/Exempt checkboxes that exclude each other (confirmation before removing a default exemption), "Time left on screen" choice (pill / bar / off) stored as `time_left_display` (data-model.md Settings `time_left_display`)
+- [X] T074 `A/session/TimeLeftOverlay.kt`: draggable pill (tap → session sheet) and touch-through bar, driven by `SessionService`, hidden with the card, during calls (API 31+ listener) and on the lock screen. Comment on overlay touch rules
+- [X] T075 Time's-up card as a pop-up over the dimmed app (`calm_card.xml`, `OverlayController`), with transient audio focus while shown so media pauses
+- [ ] T076 Device check: quickstart §3 rows 8, 14 and 15, plus the settings screen readability
+
+## Phase 12: Owner feedback, second round (visibility, settings, accent colour)
+
+**Owner approval**: reviewed and approved by the owner on 2026-11-21, after implementation (built before approval; analysis D1). Device check T082 still open.
+
+**Goal**: The time-left reminder is impossible to miss, settings read as a real settings screen, the
+prompt fits on one line, and the user can pick one accent colour (spec Clarifications, second round;
+FR-024, FR-029, FR-030).
+
+- [X] T077 [US2] Accent colour (FR-030): `calmAccent` / `calmOnAccent` theme attributes, `CalmAccent.*` overlays (values, values-night, values-v31 system palette), `A/ui/CalmLook.kt` (`Accent`, SharedPreferences `calm_look`, data-model.md Settings `calm_look.accent`, excluded from backup), applied in `CalmActivity` and `themedContext`; notifications tinted. Test: `app/src/test/java/app/calmlauncher/ui/AccentTest.kt`
+- [X] T078 [US4] Screen time limits redesign: cards (setup status, sessions, time left, accent, apps), `SettingSteps` steppers and session-length chips (max 6, data-model.md `TrackedApp.presetsMin`), app icons, status lines, Track / Exempt toggles, tracked apps first, tap a tracked app → per-app editor; every change saves at once. Test: `app/src/test/java/app/calmlauncher/settings/SettingStepsTest.kt`
+- [X] T079 [US2] Pill and bar redesign (FR-029): solid accent pill with shadow and an emptying ring, 6 dp accent bar on a dark track, amber from the warning on, pulse at the warning; `TimeLeft.nextRefreshMs` also steps the ring. Test: `TimeLeftTest`
+- [X] T080 [US1] "How long?" presets as chips on one line (`A/ui/FlowLayout.kt`), app icon on the prompt; time's-up card with a filled Go home and chip extensions
+- [X] T081 Docs: spec (clarifications, FR-024, FR-029, FR-030), ui-surfaces, data-model, plan Complexity Tracking, quickstart rows 14 and 16–18, `docs/DEVICE_TESTS.md`
+- [ ] T082 Device check on the phone: quickstart rows 14, 16, 17 and 18
+
+---
+
+## Phase 13: Third device test — every open, leaving for another app, pill only in the app (2026-11-21)
+
+**Owner approval**: Phase 13 tasks (T083–T104) approved by the owner on 2026-11-21, before implementation.
+
+**Input**: spec Clarifications "clarify after the third device test" (FR-015, FR-029, FR-031, SC-008);
+plan update of the same date; research R13–R17; data-model `LaunchSource`, `SessionState`, state
+transitions and `event_log.detail`; contracts/engine-api invariants 7–10; quickstart rows 19–24;
+constitution 1.1.0.
+
+**Rules for this phase**: no task starts before the owner approves this list. Engine tests come first
+and must fail before their implementation task (Constitution VI). New paths: `A/access/` =
+`app/src/main/java/app/calmlauncher/access/`, `AT/` = `app/src/test/java/app/calmlauncher/`.
+
+### 13.1 Foundational: the accessibility service and the device gate
+
+**Purpose**: prove on the phone that the toggle can be turned on for an adb install and see which
+window events One UI sends, before anything is built on them.
+
+- [X] T083 Create `A/access/CalmAccessibilityService.kt` (skeleton), `app/src/main/res/xml/calm_accessibility_config.xml` (`typeWindowStateChanged` only, `canRetrieveWindowContent="false"`, no `packageNames`, `notificationTimeout="0"`), its `<service>` entry in `app/src/main/AndroidManifest.xml` (exported false, `BIND_ACCESSIBILITY_SERVICE`, label "Calm Launcher app limits"), and label/description strings in `app/src/main/res/values/calm_strings.xml` (research R13). The skeleton only logs `packageName` and `className` at debug level, never `event.text`; 2–4 line comment explaining an AccessibilityService (Constitution VIII); body in `failOpen { }`. Done: build passes and the service appears in Android's Accessibility list
+- [X] T084 Device gate (needs the phone): install with `adb install -r`, turn the toggle on and note whether "Restricted setting" appears and whether App info → ⋮ → "Allow restricted settings" fixes it. With `adb logcat -s CalmLauncher:*`, record the events for: Recents open, link open, notification open, keyboard, notification shade, edge panel, Samsung Recents screen, in-app navigation, our launcher and prompt. Write the findings and the final ignore list into research.md R14. **Gates T088 and the tasks that need the service's events (T089–T091, T094, T097).** T086 can start with the default ignore list and add the One UI packages found here. If the toggle cannot be turned on, stop and revisit research R13
+
+### 13.2 User Story 1 — every open of a tracked app is asked "How long?" (FR-031, SC-008)
+
+**Goal**: with the toggle on, a tracked app opened from the recent-apps list, a link or a notification gets the prompt or the cooldown screen.
+**Independent test**: quickstart rows 19 and 20.
+
+- [X] T085 [P] [US1] Engine tests first, in new file `engine/src/test/kotlin/app/calmlauncher/engine/OutsideOpenTest.kt` (must fail before T087), for contracts/engine-api invariants 7 and 10: an OUTSIDE `Allow` emits no `LaunchApp`; OUTSIDE `AskDuration` → `Prompting(source = OUTSIDE)` + `ShowPrompt`; `DurationChosen` from an OUTSIDE prompt → `Running` with no `LaunchApp`; `OverrideCompleted` from an OUTSIDE cooldown screen → `Running` with no `LaunchApp`; `LaunchRequested(same key, OUTSIDE)` while `Prompting(key)` → unchanged, no effects; an OUTSIDE cancel and an OUTSIDE cooldown screen log with `detail` `src=outside`; LAUNCHER launches behave as before
+- [X] T086 [P] [US1] Pure `E/ForegroundFilter.kt` (no Android types: the service passes the package, an is-activity flag and the time) with JVM tests first in `ET/ForegroundFilterTest.kt` (research R14, R15; contracts/engine-api `ForegroundFilter`): non-activity windows, `com.android.systemui`, input methods and the Recents screen (class `com.android.quickstep.RecentsActivity`, found in T084) → IGNORE; our package → OWN and remembered; the same package twice → IGNORE; A → OWN → A → A again in front; `noteCancelled(pkg)` ignores that package for 3 s, then allows it; a null package → IGNORE
+- [X] T087 [US1] Implement launch sources in `engine/src/main/kotlin/app/calmlauncher/engine/SessionState.kt` and `engine/src/main/kotlin/app/calmlauncher/engine/SessionMachine.kt`: `LaunchSource` (data-model.md `LaunchSource`), `LaunchRequested.source` defaulting to LAUNCHER, `Prompting.source` (data-model.md `SessionState`), and the OUTSIDE rules from the data-model state table; `Log` effects from an OUTSIDE prompt (`PROMPT_CANCELLED`, `COOLDOWN_SHOWN`) carry `detail = "src=outside"` (data-model.md `event_log.detail`). T085 and all existing engine tests green
+- [X] T088 [US1] Wire `A/access/CalmAccessibilityService.kt` (after T084, T086, T087): resolve "is an activity" with a cached `PackageManager.getActivityInfo(ComponentName(pkg, className))`, run `ForegroundFilter`, and for an app newly in front call a new `SessionRepository.onAppInFront(pkg)` in `A/session/SessionRepository.kt`. That dispatches `ForegroundChanged(pkg)`, and when `pkg` is tracked (main-profile entry first, research R13), `LaunchRequested(key, RulesEngine.decide(...), cooldownMin, OUTSIDE)`. Keep the service's connected state in `A/access/AccessState.kt` (`onServiceConnected` / `onUnbind`). Never read `event.text` or nodes; everything in `failOpen { }`
+- [X] T089 [US1] Outside prompts in `A/session/SessionRepository.kt` and `A/prompt/PromptActivity.kt` (after T088): `ShowPrompt` / `ShowBlocked` from an OUTSIDE launch start `PromptActivity` from the application context (it already uses `FLAG_ACTIVITY_NEW_TASK`). When `Cancelled` ends a `Prompting(source = OUTSIDE)`, call `ForegroundFilter.noteCancelled(pkg, now)`; the prompt already goes home. The engine tags these log entries (T087)
+- [X] T090 [US1] Skip the unplanned-open UsageStats query in `A/session/SessionRepository.kt` while `AccessState` says the service is connected (data-model.md unplanned-open note, research R15)
+- [ ] T091 [US1] Device check (needs the phone): quickstart rows 19 and 20, including the ≤ 1 s target (SC-008); and SC-007: with the toggle on, untracked apps opened from the launcher and from Recents show no visible delay; record in `docs/DEVICE_TESTS.md`
+
+### 13.3 User Story 6 — leaving for another app ends the session (FR-015)
+
+**Goal**: going home, or switching to any other app, for 2+ minutes ends the session as left early; coming back within 2 minutes continues it.
+**Independent test**: quickstart rows 21, 22 and the grace part of row 23.
+
+- [ ] T092 [P] [US6] Engine tests first, in new file `engine/src/test/kotlin/app/calmlauncher/engine/LeavingTest.kt` (must fail before T093), for contracts/engine-api invariants 8 and 9 and the data-model transitions: `ForegroundChanged(other)` starts the grace (`leftAt`, `ScheduleAt(GRACE)`) only when none is pending; `ForegroundChanged(session pkg)` and `LaunchRequested(session key, Allow)` (both sources) clear it; `LauncherPaused` leaves it pending; `GraceElapsed(false)` ends `LEFT_EARLY` with `leftAt`; `GraceElapsed(true)` and `GraceElapsed(null)` clear it and continue; `ForegroundChanged` while another app's prompt is open reaches the session behind it. Update the existing grace tests in `engine/src/test/kotlin/app/calmlauncher/engine/SessionMachineTest.kt` (`GraceElapsed(stillOnLauncher)`, "LauncherPaused clears the grace") to the new meaning
+- [ ] T093 [US6] Implement in `engine/src/main/kotlin/app/calmlauncher/engine/SessionState.kt` and `engine/src/main/kotlin/app/calmlauncher/engine/SessionMachine.kt` (after T087, same files): `ForegroundChanged(pkg)`, `GraceElapsed(trackedInFront: Boolean?)` replacing `stillOnLauncher`, and `LauncherPaused` no longer clearing the grace (data-model.md state table, research R16). T092 and all engine tests green
+- [ ] T094 [US6] Grace result in `A/session/SessionService.kt` (after T088, T093): at the GRACE wake, compute `trackedInFront` as in research R16 from `AccessState`'s last app in front, whether the launcher is still resumed (`A/CalmHooks.kt`), and `ForegroundProbe.lastResumed`; dispatch `GraceElapsed(trackedInFront)`. Unknown → `null`
+- [ ] T095 [US6] Device check (needs the phone): quickstart rows 21, 22 and 23 (grace part); record in `docs/DEVICE_TESTS.md`
+
+### 13.4 User Story 2 — the pill or bar shows only in the tracked app (FR-029)
+
+**Goal**: with the toggle on, the reminder is hidden on the home screen and in other apps and comes back with the app; no custom animation.
+**Independent test**: quickstart row 23 (pill part) and row 14.
+
+- [ ] T096 [P] [US2] Pure rule `TimeLeft.shouldShow(counting, graceCheckAt, accessibilityOn)` in `A/session/TimeLeft.kt` with tests first in `AT/session/TimeLeftTest.kt` (research R17): shown when counting and (toggle off or no grace pending); hidden otherwise
+- [ ] T097 [US2] Use it in `A/session/TimeLeftOverlay.kt` (after T088, T093, T096): read `graceCheckAt` from the Running/Warning state and `AccessState`; remove `pulse()` and its call (Constitution IV, 1.1.0). `SessionService.reschedule` already calls `sync` after every state change
+- [ ] T098 [US2] Device check (needs the phone): quickstart row 23 (pill hides while away and comes back; keyboard and shade do not hide it) and row 14 again; record in `docs/DEVICE_TESTS.md`
+
+### 13.5 User Story 7 — setup shows the new toggle (FR-022, FR-023)
+
+**Goal**: onboarding has an "App limits" page, and the health line and settings status show when the toggle is off.
+**Independent test**: quickstart row 24 and the onboarding page.
+
+- [ ] T099 [P] [US7] In `A/onboarding/PermissionStatus.kt`: `OnboardingPage.ACCESSIBILITY`, `PermissionStatus.accessibility` (our component in `Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES`), and `HealthLine.Item.ACCESSIBILITY` ("Limits apply only from this launcher: app limits are off in Accessibility", after OVERLAY in priority). Update `AT/onboarding/HealthLineTest.kt` first
+- [ ] T100 [US7] Onboarding page in `A/onboarding/OnboardingActivity.kt` and `app/src/main/res/values/calm_strings.xml` (after T099): why, what is reduced, a button to `Settings.ACTION_ACCESSIBILITY_SETTINGS`, and the restricted-settings tip. Raise `SettingsStore.ONBOARDING_CURRENT` in `A/data/SettingsStore.kt` so existing installs see the new page once. Count the toggle in "Permissions and setup" in `A/settings/ScreenTimeSettingsActivity.kt`
+- [ ] T101 [US7] Device check (needs the phone): the onboarding page, live status, and quickstart row 24 (toggle off: launcher-only, health line, pill everywhere, row 22 still ends the session); record in `docs/DEVICE_TESTS.md`
+
+### 13.6 Polish and constitution fixes
+
+- [ ] T102 [P] Docs: rows 19–24 in `docs/DEVICE_TESTS.md`; the restricted-settings tip in `docs/DEV_SETUP.md` §6; the new manifest service and our own accessibility config in `docs/TECHNICAL_DESIGN.md` §2 (the manifest is already listed as an upstream-edited file)
+- [ ] T103 Move the track/exempt rule into the engine (Constitution VI, analysis D2): new `E/ExemptRules.kt` with `enum class ExemptionKind { ALWAYS, DEFAULT, USER }`, `whenTracking(kind: ExemptionKind?)` and `trackedToDrop(tracked, exemptPkgs)`; move the tests from `AT/exempt/ExemptRulesTest.kt` to `ET/ExemptRulesTest.kt` first (they fail until the engine code exists); `A/session/SessionRepository.kt` maps `exempt_app.category` and `exempt_app.source` to `ExemptionKind` (data-model.md `exempt_app.category`: SYSTEM → ALWAYS; data-model.md `exempt_app.source`: DEFAULT, USER); delete `A/exempt/ExemptRules.kt`. Also make `TrackedApp.of` keep at most 6 presets, with a test in `ET/` (data-model.md `TrackedApp.presetsMin`, analysis C3). No phone needed; it edits `SessionRepository.kt`, so run it before T088 or after T090, not in between
+- [ ] T104 Before committing: remove the Sync Impact Report comment from `.specify/memory/constitution.md` (constitution workflow note), run `./gradlew :engine:test test assembleDebug` and the apkanalyzer check (quickstart §1: no network permission), then commit when the owner asks
+
+### Phase 13 implementation notes
+
+- T084: toggle turned on with no restricted-settings prompt; event findings and the final ignore rules are in research.md R14 (the Samsung recent-apps screen is ignored by class name).
+- T085/T086: 17 new engine tests seen failing against stubs, then green with T087.
+- T088: `SessionRepository.onAppInFront` dispatches only the outside `LaunchRequested` for now; the `ForegroundChanged` dispatch arrives with US6 (T093/T094), where that event is introduced.
+
+### Phase 13 dependencies
+
+- T083 → T084 (gate). The engine and pure tasks do not need the phone: T085, T086, T092, T096 and T099 can start at once, in parallel.
+- T085 → T087 → T093 (T093 also needs T092). T087 and T093 edit the same two engine files, so they run one after the other.
+- T084 + T086 + T087 → T088 → T089 → T090 → T091.
+- T088 + T093 → T094 → T095.
+- T088 + T093 + T096 → T097 → T098.
+- T099 → T100 → T101.
+- T102 any time after T084; T103 any time before T088 or after T090; T104 last.
+- Still open from earlier phases and best checked in the same phone session: T076 and T082 (rows 8, 14–18).
+
+### Parallel example: Phase 13 start
+
+```text
+T083 CalmAccessibilityService skeleton | T085 OutsideOpenTest.kt | T086 ForegroundFilter(+Test)
+T092 LeavingTest.kt | T096 TimeLeft.shouldShow(+Test) | T099 PermissionStatus/HealthLine(+Test)
+```
+
+### Phase 13 strategy
+
+1. **Gate first:** T083–T084 on the phone. If the toggle cannot be turned on for an adb install, nothing else in this phase is useful.
+2. **US1 next:** catching opens from Recents is the biggest gap the owner found; ship and check it (T091) before US6 and US2.
+3. **US6, then US2:** both reuse the grace and the service state; US2 is the smallest change.
+4. **US7 last:** the page and health line, then one device session for all open checks (T091, T095, T098, T101 plus T076/T082).
+
+---
+
+## Phase 14: A tracked app used during a call (2026-11-23)
+
+**Owner approval**: the rule ("pill and card when the tracked app is in front during a call") was chosen by the owner on 2026-11-23, before implementation.
+
+**Input**: spec Clarifications "Session 2026-11-23", US4 sc. 3 and 7, FR-018, FR-029, FR-012; research R7 and R6 updates; contracts/ui-surfaces rows Warning, Time's-up card and Time left on screen; quickstart rows 6 and 25.
+
+- [X] T105 [US4] Pure rule `E/CallRule.kt` `blocks(call, locked, screenOff, trackedInFront)` with JVM tests in `ET/CallRuleTest.kt` (research R7): lock screen, dark screen and a ringing call always block; a running call blocks unless the tracked app is in front
+- [X] T106 [US4] `A/enforce/CallGuard.kt`: `callState`, `isBlocked(context, pkg)` reading `AccessState.inFront`, `guardState(context, pkg)`, `onForegroundChanged`; `check` and the 2 s settle use the session's app. `A/enforce/Enforcer.kt`: the card gates pass the app, the warning keeps "any call blocks"
+- [X] T107 [US2] `A/session/TimeLeftOverlay.kt`: the reminder asks `CallGuard.isBlocked(app, pkg)` and gains `onForegroundChanged`; `A/access/CalmAccessibilityService.kt` calls both hooks whenever the app in front changes (no polling)
+- [X] T108 [US3] `A/enforce/OverlayController.kt`: no audio-focus request while a call rings or runs (FR-012, FR-018)
+- [X] T109 [US3] `A/enforce/ForegroundProbe.kt`: the usage-history query reaches back to the session start (research R6 update)
+- [X] T110 [US1] `A/gate/LaunchGate.kt`: debug builds log why a launch was not prompted (`no prompt for <pkg>: RUNNING`)
+- [ ] T111 Run `./gradlew :engine:test test assembleDebug`. T105–T110 were written on a machine with no JDK or Android SDK, so nothing has been compiled or run yet
+- [ ] T112 [US4] Device check (needs the phone): quickstart rows 6 and 25; record in `docs/DEVICE_TESTS.md`
+
+### Phase 14 notes
+
+- T097 (pill only in the tracked app) must keep the call rule: during a call the reminder needs both "no grace pending" and `CallGuard.isBlocked(app, pkg) == false`.
+- The 2026-11-23 run also saw Instagram open from the launcher with no prompt during the call. The launcher gate has no call logic; it skips the prompt for a tracked app only while that app's session is still running (FR-008). T110's log line settles this at the next device check.

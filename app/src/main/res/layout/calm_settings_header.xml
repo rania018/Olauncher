@@ -1,146 +1,284 @@
 <?xml version="1.0" encoding="utf-8"?>
+<!-- Screen time limits, top part: setup, session settings, time-left reminder, accent colour and
+     the app search. The app list follows as RecyclerView rows. Every change is saved at once. -->
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
     android:orientation="vertical"
-    android:paddingHorizontal="24dp"
+    android:paddingHorizontal="20dp"
     android:paddingTop="40dp">
 
     <TextView
         style="@style/TextLarge"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:shadowRadius="0"
         android:text="@string/calm_screen_time_limits" />
 
     <TextView
-        style="@style/TextSmall"
+        style="@style/CalmCaption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="6dp"
         android:text="@string/calm_settings_hint" />
 
-    <TextView
+    <!-- Setup: permissions status, opens onboarding -->
+    <LinearLayout
         android:id="@+id/calmPermissions"
-        style="@style/CalmButton"
-        android:layout_width="wrap_content"
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginStart="-12dp"
-        android:layout_marginTop="8dp"
-        android:text="@string/calm_settings_permissions" />
+        android:layout_marginTop="20dp"
+        android:background="@drawable/calm_card_surface"
+        android:clickable="true"
+        android:focusable="true"
+        android:foreground="@drawable/calm_row_background"
+        android:gravity="center_vertical"
+        android:minHeight="64dp"
+        android:orientation="horizontal"
+        android:padding="16dp">
 
+        <LinearLayout
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:orientation="vertical">
+
+            <TextView
+                style="@style/CalmBody"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="@string/calm_settings_permissions"
+                android:textStyle="bold" />
+
+            <TextView
+                android:id="@+id/calmPermissionsStatus"
+                style="@style/CalmCaption"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="2dp"
+                tools:text="All set" />
+        </LinearLayout>
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:importantForAccessibility="no"
+            android:src="@drawable/calm_ic_chevron" />
+    </LinearLayout>
+
+    <!-- Sessions -->
     <TextView
-        style="@style/TextMedium"
+        style="@style/CalmSectionLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
         android:text="@string/calm_settings_defaults" />
 
-    <TextView
-        style="@style/TextSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:text="@string/calm_settings_presets" />
-
-    <EditText
-        android:id="@+id/calmPresets"
-        style="@style/CalmField"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="2, 5, 10, 15"
-        android:importantForAutofill="no"
-        android:inputType="text"
-        android:textStyle="bold" />
+        android:background="@drawable/calm_card_surface"
+        android:orientation="vertical"
+        android:paddingHorizontal="16dp"
+        android:paddingVertical="12dp">
+
+        <TextView
+            style="@style/CalmBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="4dp"
+            android:text="@string/calm_settings_presets" />
+
+        <TextView
+            style="@style/CalmCaption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@string/calm_settings_presets_hint" />
+
+        <app.calmlauncher.ui.FlowLayout
+            android:id="@+id/calmPresetChips"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:layout_marginBottom="8dp" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="8dp"
+            android:background="@color/calm_line" />
+
+        <include
+            android:id="@+id/calmCooldownRow"
+            layout="@layout/calm_stepper_row" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="8dp"
+            android:background="@color/calm_line" />
+
+        <include
+            android:id="@+id/calmWarningRow"
+            layout="@layout/calm_stepper_row" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginVertical="8dp"
+            android:background="@color/calm_line" />
+
+        <include
+            android:id="@+id/calmExtensionRow"
+            layout="@layout/calm_stepper_row" />
+    </LinearLayout>
 
     <TextView
-        style="@style/TextSmall"
+        style="@style/CalmCaption"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
         android:layout_marginTop="8dp"
-        android:text="@string/calm_settings_cooldown" />
-
-    <EditText
-        android:id="@+id/calmCooldown"
-        style="@style/CalmField"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:importantForAutofill="no"
-        android:inputType="number"
-        android:maxLength="2"
-        android:textStyle="bold" />
-
-    <TextView
-        style="@style/TextSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/calm_settings_warning" />
-
-    <EditText
-        android:id="@+id/calmWarning"
-        style="@style/CalmField"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:importantForAutofill="no"
-        android:inputType="number"
-        android:maxLength="3"
-        android:textStyle="bold" />
-
-    <TextView
-        style="@style/TextSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:text="@string/calm_settings_extension_wait" />
-
-    <EditText
-        android:id="@+id/calmExtensionWait"
-        style="@style/CalmField"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:importantForAutofill="no"
-        android:inputType="number"
-        android:maxLength="3"
-        android:textStyle="bold" />
-
-    <TextView
-        style="@style/TextSmall"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:alpha="0.8"
         android:text="@string/calm_settings_apply_note" />
 
+    <!-- Time left on screen (FR-029) -->
     <TextView
-        android:id="@+id/calmSettingsError"
-        style="@style/TextSmall"
+        style="@style/CalmSectionLabel"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
-        android:visibility="gone" />
+        android:text="@string/calm_settings_time_left" />
 
-    <TextView
-        android:id="@+id/calmSave"
-        style="@style/CalmButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="-12dp"
-        android:text="@string/calm_settings_save" />
-
-    <TextView
-        style="@style/TextMedium"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:text="@string/calm_settings_apps" />
-
-    <EditText
-        android:id="@+id/calmSearch"
-        style="@style/CalmField"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="4dp"
-        android:hint="@string/calm_settings_search"
-        android:importantForAutofill="no"
-        android:inputType="textNoSuggestions" />
+        android:background="@drawable/calm_card_surface"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView
+                android:id="@+id/calmTimeLeftPill"
+                style="@style/CalmToggle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/calm_time_left_pill" />
+
+            <TextView
+                android:id="@+id/calmTimeLeftBar"
+                style="@style/CalmToggle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="@string/calm_time_left_bar" />
+
+            <TextView
+                android:id="@+id/calmTimeLeftOff"
+                style="@style/CalmToggle"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:text="@string/calm_time_left_off" />
+        </LinearLayout>
+
+        <TextView
+            android:id="@+id/calmTimeLeftHint"
+            style="@style/CalmCaption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            tools:text="A small timer in the top corner." />
+    </LinearLayout>
+
+    <!-- Accent colour (FR-030) -->
+    <TextView
+        style="@style/CalmSectionLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/calm_settings_accent" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/calm_card_surface"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <app.calmlauncher.ui.FlowLayout
+            android:id="@+id/calmAccentSwatches"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/calmAccentName"
+            style="@style/CalmBody"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:textStyle="bold"
+            tools:text="Phone's colour" />
+
+        <TextView
+            style="@style/CalmCaption"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="2dp"
+            android:text="@string/calm_settings_accent_hint" />
+    </LinearLayout>
+
+    <!-- Apps -->
+    <TextView
+        style="@style/CalmSectionLabel"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/calm_settings_apps" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/calm_search_background"
+        android:gravity="center_vertical"
+        android:orientation="horizontal"
+        android:paddingHorizontal="16dp">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:alpha="0.7"
+            android:importantForAccessibility="no"
+            android:src="@drawable/calm_ic_search" />
+
+        <EditText
+            android:id="@+id/calmSearch"
+            style="@style/CalmBody"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="10dp"
+            android:layout_weight="1"
+            android:background="@null"
+            android:hint="@string/calm_settings_search"
+            android:importantForAutofill="no"
+            android:inputType="textNoSuggestions"
+            android:maxLines="1"
+            android:minHeight="48dp"
+            android:textColorHint="?attr/primaryColorTrans50" />
+    </LinearLayout>
+
+    <TextView
+        style="@style/CalmCaption"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="4dp"
+        android:text="@string/calm_settings_apps_hint" />
 </LinearLayout>

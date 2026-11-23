@@ -111,6 +111,10 @@ object SessionMachine {
     // ------------------------------------------------------------------------------------ launch
 
     private fun launchRequested(state: SessionState, e: LaunchRequested, now: Long): Transition {
+        val outside = e.source == LaunchSource.OUTSIDE
+        // More window events of the app we are already asking about must not restart the prompt
+        // or its override wait (invariant 10).
+        if (outside && state is Prompting && state.key == e.key) return Transition(state)
         // A new launch replaces an open prompt; what was running behind it stays the same.
         val base = if (state is Prompting) state.previous else state
         return when (val d = e.decision) {
@@ -120,24 +124,29 @@ object SessionMachine {
                     is Warning -> if (base.rec.key == e.key) clearGrace(base) else Transition(base)
                     else -> Transition(base)
                 }
-                Transition(t.state, t.effects + LaunchApp(e.key))
+                // An app opened from outside is already on screen: never relaunch it (invariant 7).
+                Transition(t.state, if (outside) t.effects else t.effects + LaunchApp(e.key))
             }
 
             is AskDuration -> Transition(
-                Prompting(e.key, e.cooldownMin, base),
+                Prompting(e.key, e.cooldownMin, base, source = e.source),
                 listOf(ShowPrompt(e.key, d.presetsMin, d.customMaxMin)),
             )
 
             is Blocked -> Transition(
-                Prompting(e.key, e.cooldownMin, base, blockedUntil = d.until),
-                listOf(ShowBlocked(e.key, d.until), Log(EventType.COOLDOWN_SHOWN, e.key)),
+                Prompting(e.key, e.cooldownMin, base, blockedUntil = d.until, source = e.source),
+                listOf(ShowBlocked(e.key, d.until), Log(EventType.COOLDOWN_SHOWN, e.key, sourceDetail(e.source))),
             )
         }
     }
 
+    /** `event_log.detail` for prompts of an app opened from outside (data-model.md); null otherwise. */
+    private fun sourceDetail(source: LaunchSource): String? =
+        if (source == LaunchSource.OUTSIDE) "src=outside" else null
+
     private fun cancelled(state: SessionState): Transition {
         if (state !is Prompting) return Transition(state)
-        val log = if (state.isBlocked) emptyList() else listOf(Log(EventType.PROMPT_CANCELLED, state.key))
+        val log = if (state.isBlocked) emptyList() else listOf(Log(EventType.PROMPT_CANCELLED, state.key, sourceDetail(state.source)))
         return Transition(state.previous, log)
     }
 
@@ -153,10 +162,14 @@ object SessionMachine {
         return startSession(state, rec, cfg, extra = emptyList())
     }
 
-    /** Ends whatever ran behind the prompt, then starts [rec] and opens the app. */
+    /**
+     * Ends whatever ran behind the prompt, then starts [rec] and opens the app. An app opened from
+     * outside the launcher is already underneath the prompt, so it is not opened again (invariant 7).
+     */
     private fun startSession(prompt: Prompting, rec: SessionRecord, cfg: Config, extra: List<Effect>): Transition {
+        val launch = if (prompt.source == LaunchSource.OUTSIDE) emptyList() else listOf(LaunchApp(rec.key))
         val effects = endPrevious(prompt.previous, rec.startedAt) +
-            listOf(PersistSession(rec), LaunchApp(rec.key), StartCountdown(rec)) +
+            listOf(PersistSession(rec)) + launch + listOf(StartCountdown(rec)) +
             schedules(rec, cfg, includeWarning = true) +
             extra
         return Transition(Running(rec, prompt.cooldownMin), effects)

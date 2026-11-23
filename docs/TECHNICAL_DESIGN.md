@@ -301,8 +301,8 @@ Behaviour summary:
   - If overlay permission is missing, it falls back to a high-priority "Time's up" notification whose tap goes home. Never block.
 
 **Not breaking the phone (enforced in `OverlayController`):**
-1. Before showing anything, `ForegroundProbe` checks the tracked app is actually in front. MVP: a one-shot `UsageStatsManager.queryEvents` for the last 10 min. P2: accessibility. Another app or unknown means no overlay; the session ends silently (fail open).
-2. `CallGuard`: `AudioManager.mode` in `MODE_IN_CALL`, `MODE_IN_COMMUNICATION` or `MODE_RINGTONE` defers all UI (needs no permission; covers VoIP).
+1. Before showing anything, `ForegroundProbe` checks the tracked app is actually in front. MVP: a one-shot `UsageStatsManager.queryEvents` reaching back to 10 min before the session start. P2: accessibility. Another app or unknown means no overlay; the session ends silently (fail open).
+2. `CallGuard`: `AudioManager.mode` `MODE_RINGTONE` defers all UI; `MODE_IN_CALL` or `MODE_IN_COMMUNICATION` defers it unless the app-limits accessibility service last saw the tracked app in front (needs no permission; covers VoIP; rule in the engine's `CallRule`, spec FR-018 as updated 2026-11-23).
 3. Never over the lock screen (`KeyguardManager.isKeyguardLocked` means defer until `USER_PRESENT`).
 4. **Watchdog:** any overlay removes itself after 120 s without interaction, leaving the user where they were (logged as `OVERLAY_TIMEOUT`). A bug can never leave a permanent cover.
 5. The overlay always handles Back and Home (Home closes it via `ACTION_CLOSE_SYSTEM_DIALOGS` / `onConfigurationChanged` detection; and the launcher resume path removes any overlay).

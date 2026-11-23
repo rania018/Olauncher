@@ -13,7 +13,8 @@ import app.olauncher.data.Prefs
 
 /**
  * Base for Calm Launcher's own screens. It applies the same look as upstream's MainActivity:
- * the chosen light/dark theme, the text size and the bold-font option (Constitution IV).
+ * the chosen light/dark theme, the text size and the bold-font option (Constitution IV), plus
+ * the user's accent colour (spec FR-030).
  */
 abstract class CalmActivity : AppCompatActivity() {
 
@@ -29,6 +30,7 @@ abstract class CalmActivity : AppCompatActivity() {
         AppCompatDelegate.setDefaultNightMode(Prefs(this).appTheme)
         super.onCreate(savedInstanceState)
         if (Prefs(this).boldFont) theme.applyStyle(R.style.BoldFontOverlay, true)
+        CalmLook.applyTo(theme, this)
     }
 
     companion object {
@@ -48,6 +50,7 @@ abstract class CalmActivity : AppCompatActivity() {
             config.fontScale = prefs.textSizeScale
             return ContextThemeWrapper(context.createConfigurationContext(config), R.style.AppTheme).apply {
                 if (prefs.boldFont) theme.applyStyle(R.style.BoldFontOverlay, true)
+                CalmLook.applyTo(theme, context)
             }
         }
     }

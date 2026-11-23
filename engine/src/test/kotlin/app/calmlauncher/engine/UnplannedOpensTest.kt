@@ -12,7 +12,8 @@ class UnplannedOpensTest {
 
     private val ig = INSTAGRAM.pkg
     private val launcher = "app.calmlauncher"
-    private val tracked = setOf(ig)
+    /** Instagram has been tracked since long before T0. */
+    private val tracked = mapOf(ig to T0 - min(60))
 
     @Test
     fun openWithoutASessionIsUnplanned() {
@@ -50,5 +51,14 @@ class UnplannedOpensTest {
     fun returningToTheAppAfterAnotherAppIsANewOpen() {
         val resumes = listOf(Resume(ig, T0), Resume("com.whatsapp", T0 + min(1)), Resume(ig, T0 + min(2)))
         assertEquals(2, UnplannedOpens.find(resumes, tracked, emptyList(), T0 + min(3)).size)
+    }
+
+    @Test
+    fun opensFromBeforeTheAppWasTrackedDoNotCount() {
+        val trackedAt = T0 + min(5)
+        val before = Resume(ig, T0 + min(2))
+        val after = Resume(ig, T0 + min(8))
+        val resumes = listOf(before, Resume(launcher, T0 + min(3)), after)
+        assertEquals(listOf(after), UnplannedOpens.find(resumes, mapOf(ig to trackedAt), emptyList(), T0 + min(10)))
     }
 }

@@ -87,7 +87,7 @@ MVP, P2 or P3.
 | T6 | End of session: calm full-screen "Time's up" screen, then return to home. Choices: *Go home* (default) or *Extend* | MUST | MVP |
 | T7 | Extension with friction: +2 / +5 min, available only after a 15 s wait, max 2 extensions per session, each logged. The emergency override grants a fixed 5 min | MUST | MVP |
 | T8 | Timer survives launcher process death and reboot (state persisted, deadline-based) | MUST | MVP |
-| T9 | Calls are never interrupted: expiry is deferred while a call is active (phone or VoIP) | MUST | MVP |
+| T9 | Calls are never interrupted: expiry is deferred while the phone rings, and while a call (phone or VoIP) is active unless the tracked app itself is confirmed to be in front; the call's sound is never touched | MUST | MVP |
 
 ### 6.3 Friction and awareness
 

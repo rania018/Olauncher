@@ -3,6 +3,9 @@ package app.calmlauncher.enforce
 import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.PixelFormat
+import android.media.AudioAttributes
+import android.media.AudioFocusRequest
+import android.media.AudioManager
 import android.os.Build
 import android.os.Handler
 import android.os.Looper
@@ -17,6 +20,7 @@ import android.widget.FrameLayout
 import android.widget.TextView
 import androidx.core.view.isVisible
 import app.calmlauncher.CalmGraph
+import app.calmlauncher.engine.CallRule
 import app.calmlauncher.engine.Config
 import app.calmlauncher.engine.SessionEvent
 import app.calmlauncher.engine.SessionRecord
@@ -28,7 +32,10 @@ import app.olauncher.R
 import app.olauncher.databinding.CalmCardBinding
 
 /**
- * The full-screen time's-up card (spec US3, contracts/ui-surfaces.md).
+ * The time's-up card (spec US3, FR-012, contracts/ui-surfaces.md): a pop-up over the dimmed app.
+ * The app stays visible, but a full-screen translucent scrim takes every touch until the user
+ * chooses, and video or music is paused while the card is up (transient audio focus; not during a
+ * call, whose sound is left alone).
  *
  * An overlay window is a view our app adds straight to the screen with WindowManager, on top of
  * other apps, without starting an Activity. It needs the "Display over other apps" permission
@@ -75,7 +82,8 @@ object OverlayController {
                 WindowManager.LayoutParams.MATCH_PARENT,
                 type,
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
-                PixelFormat.OPAQUE,
+                // Translucent: the dimmed app shows through the scrim around the card.
+                PixelFormat.TRANSLUCENT,
             ).apply {
                 gravity = Gravity.TOP or Gravity.START
                 title = "Calm Launcher time's up"
@@ -85,6 +93,8 @@ object OverlayController {
             windowManager = wm
             root = view
             view.requestFocus()
+            // During a call the sound belongs to the call: the card never asks for audio focus then.
+            if (CallGuard.callState(app) == CallRule.Call.NONE) pauseMedia(app)
             restartTimeout(cfg)
             true
         }
@@ -94,10 +104,57 @@ object OverlayController {
         handler.removeCallbacksAndMessages(null)
         val view = root ?: return
         root = null
+        windowManager?.let { resumeMedia(view.context.applicationContext) }
         try {
             windowManager?.removeViewImmediate(view)
         } catch (e: Exception) {
             CalmLog.w("removing the card failed", e)
+        }
+    }
+
+    private var focusRequest: AudioFocusRequest? = null
+    private val ignoreFocusChanges = AudioManager.OnAudioFocusChangeListener { }
+
+    /**
+     * Asks for audio focus for as long as the card is up. Apps that play video or music are told
+     * they lost focus for a moment and pause; they may resume when the card goes away (spec FR-012).
+     */
+    private fun pauseMedia(app: Context) {
+        val audio = app.getSystemService(AudioManager::class.java) ?: return
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                val request = AudioFocusRequest.Builder(AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+                    .setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_MEDIA)
+                            .setContentType(AudioAttributes.CONTENT_TYPE_UNKNOWN)
+                            .build(),
+                    )
+                    .setOnAudioFocusChangeListener(ignoreFocusChanges)
+                    .build()
+                audio.requestAudioFocus(request)
+                focusRequest = request
+            } else {
+                @Suppress("DEPRECATION")
+                audio.requestAudioFocus(ignoreFocusChanges, AudioManager.STREAM_MUSIC, AudioManager.AUDIOFOCUS_GAIN_TRANSIENT)
+            }
+        } catch (e: Exception) {
+            CalmLog.w("could not pause media", e)
+        }
+    }
+
+    private fun resumeMedia(app: Context) {
+        val audio = app.getSystemService(AudioManager::class.java) ?: return
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                focusRequest?.let { audio.abandonAudioFocusRequest(it) }
+                focusRequest = null
+            } else {
+                @Suppress("DEPRECATION")
+                audio.abandonAudioFocus(ignoreFocusChanges)
+            }
+        } catch (e: Exception) {
+            CalmLog.w("could not release audio focus", e)
         }
     }
 
@@ -150,7 +207,7 @@ object OverlayController {
             b.calmCardExtendRow.isVisible = true
             repo.dispatch(SessionEvent.ExtendStarted)
             val options = cfg.extensionOptionsMin.map { minutes ->
-                TextView(b.root.context, null, 0, R.style.CalmButton).apply {
+                TextView(b.root.context, null, 0, R.style.CalmChip).apply {
                     text = context.getString(R.string.calm_card_extend_option, minutes)
                     isEnabled = false
                     alpha = DISABLED_ALPHA

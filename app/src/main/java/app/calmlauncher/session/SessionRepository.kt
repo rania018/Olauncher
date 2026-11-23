@@ -4,6 +4,7 @@ import android.content.Context
 import android.os.Build
 import androidx.datastore.preferences.core.MutablePreferences
 import app.calmlauncher.CalmGraph
+import app.calmlauncher.access.AccessState
 import app.calmlauncher.data.CalmDatabase
 import app.calmlauncher.data.ExemptAppEntity
 import app.calmlauncher.data.ExemptCategory
@@ -19,6 +20,7 @@ import app.calmlauncher.engine.Effect
 import app.calmlauncher.engine.EndReason
 import app.calmlauncher.engine.EventType
 import app.calmlauncher.engine.Exemptions
+import app.calmlauncher.engine.LaunchSource
 import app.calmlauncher.engine.RulesEngine
 import app.calmlauncher.engine.SessionEvent
 import app.calmlauncher.engine.SessionMachine
@@ -30,6 +32,7 @@ import app.calmlauncher.engine.Wake
 import app.calmlauncher.engine.session
 import app.calmlauncher.enforce.ForegroundProbe
 import app.calmlauncher.exempt.DefaultExemptions
+import app.calmlauncher.exempt.ExemptRules
 import app.calmlauncher.onboarding.HealthLine
 import app.calmlauncher.onboarding.PermissionStatus
 import app.calmlauncher.util.Apps
@@ -79,6 +82,9 @@ class SessionRepository(context: Context, private val db: CalmDatabase, private 
     var settings: SettingsStore.Snapshot = SettingsStore.Snapshot(Config(), TrackedApp.DEFAULT_PRESETS, TrackedApp.DEFAULT_COOLDOWN_MIN, 0, null, emptySet())
         private set
     val config: Config get() = settings.config
+
+    /** The on-screen time-left reminder the user chose (FR-029). */
+    val timeLeftDisplay: TimeLeft.Display get() = TimeLeft.Display.parse(settings.timeLeftDisplay)
 
     /** The current session state. Changed only by [dispatch]. */
     var state: SessionState = SessionState.Idle
@@ -201,6 +207,30 @@ class SessionRepository(context: Context, private val db: CalmDatabase, private 
         return s is SessionState.Prompting && s.key == key
     }
 
+    /**
+     * The app-limits service saw [pkg] come to the front without our launcher: from the recent-apps
+     * list, a link or a notification (spec FR-031, research R15). A tracked app gets the same
+     * decision as a launcher open; the engine never relaunches it (it is already on screen).
+     */
+    fun onAppInFront(pkg: String) {
+        whenLoaded {
+            failOpen("SessionRepository.onAppInFront") {
+                val key = trackedKeyFor(pkg) ?: return@failOpen
+                dispatch(SessionEvent.LaunchRequested(key, decide(key), cooldownMinFor(key), LaunchSource.OUTSIDE))
+            }
+        }
+    }
+
+    /**
+     * Window events carry no user profile, so the main profile's entry wins, then any other
+     * profile's (research R13, spec edge cases).
+     */
+    private fun trackedKeyFor(pkg: String): AppKey? {
+        val mine = AppKey(pkg, Apps.mySerial(app))
+        if (tracked.containsKey(mine)) return mine
+        return tracked.keys.firstOrNull { it.pkg == pkg }
+    }
+
     /** Called when our prompt could not be started: go back to where we were (fail open). */
     fun promptFailed() {
         val s = state
@@ -219,6 +249,12 @@ class SessionRepository(context: Context, private val db: CalmDatabase, private 
         val before = state
         val t = SessionMachine.reduce(state, event, now, config)
         state = t.state
+        // An outside prompt was cancelled: its app's last windows on the way home must not prompt again.
+        if (event == SessionEvent.Cancelled && before is SessionState.Prompting &&
+            before.source == LaunchSource.OUTSIDE && state !is SessionState.Prompting
+        ) {
+            AccessState.noteCancelled(before.key.pkg, now)
+        }
         if (before != state || t.effects.isNotEmpty()) {
             CalmLog.i("$event: ${before::class.simpleName} -> ${state::class.simpleName} ${t.effects.map { it::class.simpleName }}")
         }
@@ -286,27 +322,58 @@ class SessionRepository(context: Context, private val db: CalmDatabase, private 
         tracked = apps.associateBy { it.key }
     }
 
+    /**
+     * Updates the exempt list. Tracked and exempt are exclusive (FR-004): any tracked app whose
+     * package is now exempt stops being tracked. Resolved towards exempt, the safe direction.
+     */
     private fun setExemptCache(rows: Collection<ExemptAppEntity>) {
         exemptRows = rows.associateBy { it.pkg }
         exemptions = Exemptions(
             defaults = rows.filter { it.source == ExemptSource.DEFAULT }.map { it.pkg }.toSet(),
             user = rows.filter { it.source == ExemptSource.USER }.map { it.pkg }.toSet(),
         )
-    }
-
-    fun setTracked(key: AppKey, on: Boolean) {
-        if (on) {
-            saveTracked(TrackedApp.of(key, settings.defaultPresets, settings.defaultCooldownMin))
-        } else {
-            setTrackedCache((tracked - key).values.toList())
-            CalmGraph.onDatabaseThread { it.trackedApps().delete(key.pkg, key.userSerial) }
+        val drop = ExemptRules.trackedToDrop(tracked.keys, exemptRows.keys)
+        if (drop.isNotEmpty()) {
+            CalmLog.i("no longer tracked because exempt: ${drop.map { it.pkg }}")
+            setTrackedCache((tracked - drop.toSet()).values.toList())
+            CalmGraph.onDatabaseThread { db -> drop.forEach { db.trackedApps().delete(it.pkg, it.userSerial) } }
         }
     }
 
+    /**
+     * The user ticked "Track" (FR-004). Phone, SMS and Settings are refused; a default exemption is
+     * only removed once [confirmed]; the user's own exemption is swapped for tracking.
+     */
+    fun requestTrack(key: AppKey, confirmed: Boolean = false): ExemptRules.TrackRequest {
+        val request = ExemptRules.whenTracking(exemptRows[key.pkg])
+        when (request) {
+            ExemptRules.TrackRequest.TRACK -> track(key)
+            ExemptRules.TrackRequest.REMOVE_EXEMPTION_THEN_TRACK -> if (removeExempt(key.pkg)) track(key)
+            ExemptRules.TrackRequest.CONFIRM_REMOVE_DEFAULT -> if (confirmed && removeExempt(key.pkg)) track(key)
+            ExemptRules.TrackRequest.REFUSE_ALWAYS_EXEMPT -> Unit
+        }
+        return request
+    }
+
+    private fun track(key: AppKey) {
+        if (tracked.containsKey(key)) return
+        saveTracked(TrackedApp.of(key, settings.defaultPresets, settings.defaultCooldownMin))
+    }
+
+    fun untrack(key: AppKey) {
+        setTrackedCache((tracked - key).values.toList())
+        CalmGraph.onDatabaseThread { it.trackedApps().delete(key.pkg, key.userSerial) }
+    }
+
+    /** Saves [app]'s presets and cooldown. The time it was first tracked is kept (unplanned opens count from then). */
     fun saveTracked(app: TrackedApp) {
+        if (exemptions.isExempt(app.key.pkg)) return
         setTrackedCache((tracked + (app.key to app)).values.toList())
-        val entity = Mappers.toEntity(app, System.currentTimeMillis())
-        CalmGraph.onDatabaseThread { it.trackedApps().upsert(entity) }
+        val now = System.currentTimeMillis()
+        CalmGraph.onDatabaseThread { db ->
+            val createdAt = db.trackedApps().get(app.key.pkg, app.key.userSerial)?.createdAt ?: now
+            db.trackedApps().upsert(Mappers.toEntity(app, createdAt))
+        }
     }
 
     /** Makes [pkg] exempt (source USER), unless it already is. */
@@ -392,16 +459,24 @@ class SessionRepository(context: Context, private val db: CalmDatabase, private 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q || !PermissionStatus.usageAccess(app)) return
         val now = System.currentTimeMillis()
         val mySerial = Apps.mySerial(app)
-        val trackedPkgs = tracked.keys.filter { it.userSerial == mySerial }.map { it.pkg }
-            .filterNot { exemptions.isExempt(it) }.toSet()
+        val exempt = exemptions
+        // With the app-limits toggle on, every outside open is prompted instead (spec FR-027, FR-031).
+        // The start of the next query still moves on, so turning the toggle off later does not count
+        // opens that were already prompted.
+        val serviceOn = AccessState.connected
         CalmGraph.onDatabaseThread { db ->
             val last = settingsStore.lastLauncherResumeBlocking()
             settingsStore.editBlocking { p -> p[SettingsStore.Keys.LAST_LAUNCHER_RESUME] = now }
-            if (last == null || trackedPkgs.isEmpty()) return@onDatabaseThread
+            if (serviceOn) return@onDatabaseThread
+            // Each tracked app counts only from the moment it became tracked.
+            val trackedSince = db.trackedApps().all()
+                .filter { it.userSerial == mySerial && !exempt.isExempt(it.pkg) }
+                .associate { it.pkg to it.createdAt }
+            if (last == null || trackedSince.isEmpty()) return@onDatabaseThread
             val since = maxOf(last, now - UNPLANNED_WINDOW_MS)
             val sessions = db.sessions().recent(since).map(Mappers::toRecord)
             val resumes = ForegroundProbe.resumedEvents(app, since, now)
-            UnplannedOpens.find(resumes, trackedPkgs, sessions, now).forEach {
+            UnplannedOpens.find(resumes, trackedSince, sessions, now).forEach {
                 logEvent(EventType.UNPLANNED_OPEN, it.pkg, at = it.at)
             }
         }

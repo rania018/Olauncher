@@ -1,11 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Calm Launcher screens reuse upstream's AppTheme (fonts, colours, text sizes; Constitution IV) -->
+<!-- Calm Launcher screens reuse upstream's AppTheme (fonts, light/dark, text size) and add one accent
+     colour (spec FR-030). Our screens have solid backgrounds, so the styles below drop upstream's
+     text shadow, which only helps text drawn over a wallpaper. -->
 <resources>
 
     <!-- Settings and onboarding: opaque, no wallpaper behind -->
     <style name="CalmTheme" parent="AppTheme">
         <item name="android:windowShowWallpaper">false</item>
         <item name="android:windowBackground">@color/calm_background</item>
+        <item name="calmAccent">@color/calm_accent_phone</item>
+        <item name="calmOnAccent">@color/calm_on_accent</item>
     </style>
 
     <!-- "How long?" and cooldown prompt: drawn over the launcher with a nearly opaque scrim -->
@@ -14,6 +18,51 @@
         <item name="android:windowIsTranslucent">true</item>
         <item name="android:windowBackground">@color/calm_prompt_scrim</item>
         <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
+        <item name="calmAccent">@color/calm_accent_phone</item>
+        <item name="calmOnAccent">@color/calm_on_accent</item>
+    </style>
+
+    <!-- Accent colour overlays (ui/CalmLook.kt). Each is applied on top of the screen's theme. -->
+    <style name="CalmAccent" />
+
+    <style name="CalmAccent.Phone">
+        <item name="calmAccent">@color/calm_accent_phone</item>
+        <item name="calmOnAccent">@color/calm_on_accent</item>
+    </style>
+
+    <style name="CalmAccent.Teal">
+        <item name="calmAccent">@color/calm_accent_teal</item>
+        <item name="calmOnAccent">@color/calm_on_accent</item>
+    </style>
+
+    <style name="CalmAccent.Blue">
+        <item name="calmAccent">@color/calm_accent_blue</item>
+        <item name="calmOnAccent">@color/calm_on_accent</item>
+    </style>
+
+    <style name="CalmAccent.Purple">
+        <item name="calmAccent">@color/calm_accent_purple</item>
+        <item name="calmOnAccent">@color/calm_on_accent</item>
+    </style>
+
+    <style name="CalmAccent.Pink">
+        <item name="calmAccent">@color/calm_accent_pink</item>
+        <item name="calmOnAccent">@color/calm_on_accent</item>
+    </style>
+
+    <style name="CalmAccent.Orange">
+        <item name="calmAccent">@color/calm_accent_orange</item>
+        <item name="calmOnAccent">@color/calm_on_accent</item>
+    </style>
+
+    <style name="CalmAccent.Green">
+        <item name="calmAccent">@color/calm_accent_green</item>
+        <item name="calmOnAccent">@color/calm_on_accent</item>
+    </style>
+
+    <style name="CalmAccent.Mono">
+        <item name="calmAccent">@color/calm_accent_mono</item>
+        <item name="calmOnAccent">@color/calm_on_accent</item>
     </style>
 
     <!-- A text-only button -->
@@ -41,13 +90,93 @@
         <item name="android:textColor">@drawable/text_colors_light</item>
     </style>
 
+    <!-- An outlined button in the accent colour, for actions that must read as buttons -->
+    <style name="CalmButton.Outlined">
+        <item name="android:background">@drawable/calm_button_outline</item>
+        <item name="android:paddingStart">24dp</item>
+        <item name="android:paddingEnd">24dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textSize">@dimen/text_small</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/calmAccent</item>
+        <item name="android:shadowRadius">0</item>
+    </style>
+
+    <!-- The main action of a pop-up ("Go home"): filled with the accent colour -->
+    <style name="CalmButton.Filled">
+        <item name="android:background">@drawable/calm_button_filled</item>
+        <item name="android:paddingStart">28dp</item>
+        <item name="android:paddingEnd">28dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/calmOnAccent</item>
+        <item name="android:shadowRadius">0</item>
+    </style>
+
+    <!-- A session length in "How long?" -->
+    <style name="CalmChip" parent="TextMedium">
+        <item name="android:background">@drawable/calm_chip</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">52dp</item>
+        <item name="android:minWidth">76dp</item>
+        <item name="android:paddingStart">18dp</item>
+        <item name="android:paddingEnd">18dp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textColor">?attr/calmAccent</item>
+        <item name="android:shadowRadius">0</item>
+    </style>
+
+    <!-- A toggle chip: Track / Exempt, Pill / Bar / Off, a session length in settings -->
+    <style name="CalmToggle" parent="TextSmall">
+        <item name="android:background">@drawable/calm_toggle</item>
+        <item name="android:clickable">true</item>
+        <item name="android:focusable">true</item>
+        <item name="android:gravity">center</item>
+        <item name="android:minHeight">40dp</item>
+        <item name="android:paddingStart">14dp</item>
+        <item name="android:paddingEnd">14dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/calm_toggle_text</item>
+        <item name="android:shadowRadius">0</item>
+        <item name="android:maxLines">1</item>
+    </style>
+
+    <!-- A section title above a card: small capitals in the accent colour -->
+    <style name="CalmSectionLabel" parent="TextSmall">
+        <item name="android:textSize">13sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:textAllCaps">true</item>
+        <item name="android:letterSpacing">0.08</item>
+        <item name="android:textColor">?attr/calmAccent</item>
+        <item name="android:shadowRadius">0</item>
+        <item name="android:layout_marginTop">28dp</item>
+        <item name="android:layout_marginBottom">8dp</item>
+        <item name="android:layout_marginStart">4dp</item>
+    </style>
+
+    <!-- Body text inside cards -->
+    <style name="CalmBody" parent="TextSmall">
+        <item name="android:shadowRadius">0</item>
+    </style>
+
+    <!-- Secondary text inside cards: smaller and fainter -->
+    <style name="CalmCaption" parent="TextSmall">
+        <item name="android:textSize">13sp</item>
+        <item name="android:alpha">0.7</item>
+        <item name="android:shadowRadius">0</item>
+    </style>
+
+    <!-- An input field: keeps Android's underline so it is clearly editable -->
     <style name="CalmField" parent="TextSmall">
-        <item name="android:background">@null</item>
+        <item name="android:backgroundTint">?attr/calmAccent</item>
         <item name="android:textColorHint">?attr/primaryColorTrans50</item>
         <item name="android:minHeight">48dp</item>
         <item name="android:paddingStart">8dp</item>
         <item name="android:paddingEnd">8dp</item>
         <item name="android:maxLines">1</item>
+        <item name="android:shadowRadius">0</item>
     </style>
 
 </resources>

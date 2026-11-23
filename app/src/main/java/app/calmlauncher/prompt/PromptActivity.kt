@@ -107,6 +107,7 @@ class PromptActivity : CalmActivity() {
         b.promptCustomError.isVisible = false
         b.promptOverrideWait.isVisible = false
         b.promptOverride.isVisible = true
+        showIcon(key)
 
         when (mode) {
             MODE_DURATION -> bindDuration(intent)
@@ -127,13 +128,14 @@ class PromptActivity : CalmActivity() {
         b.promptSubtitle.text = label(key)
         b.promptDuration.isVisible = true
 
+        // Session lengths as chips on one line; the row wraps only if they do not fit.
         b.promptPresets.removeAllViews()
         presets.forEach { minutes ->
-            val button = TextView(this, null, 0, R.style.CalmButton).apply {
+            val chip = TextView(this, null, 0, R.style.CalmChip).apply {
                 text = getString(R.string.calm_minutes_short, minutes)
                 setOnClickListener { failOpen("PromptActivity.preset") { choose(minutes) } }
             }
-            b.promptPresets.addView(button)
+            b.promptPresets.addView(chip)
         }
 
         b.promptCustom.setText("")
@@ -245,6 +247,7 @@ class PromptActivity : CalmActivity() {
             b.promptSubtitle.text = ""
             return
         }
+        showIcon(rec.key)
         b.promptTitle.text = label(rec.key)
         b.promptSubtitle.text = getString(R.string.calm_session_ends_at, time(rec.deadlineAt))
         b.promptEndNow.isVisible = true
@@ -275,6 +278,13 @@ class PromptActivity : CalmActivity() {
     private fun isOurPrompt(): Boolean {
         val s = repo.state
         return s is SessionState.Prompting && s.key == key
+    }
+
+    /** The app's own icon above the title, so it is clear at a glance which app is asking. */
+    private fun showIcon(key: AppKey?) {
+        val icon = key?.let { Apps.icon(this, it) }
+        b.promptIcon.setImageDrawable(icon)
+        b.promptIcon.isVisible = icon != null
     }
 
     private fun label(key: AppKey): String = AppLauncher.target(key)?.label ?: Apps.label(this, key)

@@ -60,11 +60,10 @@
 
             <TextView
                 android:id="@+id/onbOpen"
-                style="@style/CalmButton"
+                style="@style/CalmButton.Outlined"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="-12dp"
-                android:layout_marginTop="8dp"
+                android:layout_marginTop="12dp"
                 android:text="@string/calm_onb_open_setting" />
 
             <LinearLayout

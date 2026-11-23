@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Text of a toggle chip: on the accent when selected, the normal text colour otherwise -->
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+    <item android:color="?attr/calmOnAccent" android:state_selected="true" />
+    <item android:alpha="0.38" android:color="?attr/primaryColor" android:state_enabled="false" />
+    <item android:color="?attr/primaryColor" />
+</selector>

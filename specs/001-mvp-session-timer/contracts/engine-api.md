@@ -33,6 +33,22 @@ object SessionMachine {
 }
 ```
 
+### Launch source, foreground changes and the grace result (added 2026-11-21, research R15–R16)
+
+```kotlin
+enum class LaunchSource { LAUNCHER, OUTSIDE }
+
+sealed interface SessionEvent {
+    data class LaunchRequested(val key: AppKey, val decision: Decision, val cooldownMin: Int,
+                               val source: LaunchSource = LaunchSource.LAUNCHER) : SessionEvent
+    /** Accessibility only: [pkg] came to the front. Never our own package. */
+    data class ForegroundChanged(val pkg: String) : SessionEvent
+    /** End of the grace: true = the session's app is in front, false = another app or the launcher, null = unknown. */
+    data class GraceElapsed(val trackedInFront: Boolean?) : SessionEvent
+    // other events unchanged
+}
+```
+
 Required invariants (each has a test):
 1. `decide` returns `Allow(EXEMPT)` for every exempt package, whatever the other inputs.
 2. `decide` never throws; if `history` or `tracked` is malformed, it returns `Allow(FAIL_OPEN)`.
@@ -40,6 +56,10 @@ Required invariants (each has a test):
 4. `reduce` at most one active session; a `DurationChosen` while another session is active ends the other one as `LEFT_EARLY`.
 5. Extensions never exceed `maxExtensions`; overrides are unlimited but each logs `OVERRIDE`.
 6. A deadline in the past at `Reconcile` produces `EndSession(EXPIRED, at = deadline)` and **no** UI effect.
+7. A launch with `source = OUTSIDE` never produces `LaunchApp`, whatever the decision or the later `DurationChosen` / `OverrideCompleted`.
+8. `LauncherPaused` never clears a pending grace; only the session's app coming back (`ForegroundChanged` or `LaunchRequested` for its key) does.
+9. `GraceElapsed` ends a session only when `trackedInFront == false`.
+10. `LaunchRequested(key, OUTSIDE)` while `Prompting(key)` leaves the state unchanged and has no effects.
 
 ## Adapter entry points (package `app.calmlauncher`)
 
@@ -61,7 +81,16 @@ object CalmHooks {
 }
 ```
 
-Both entry points wrap their body in `failOpen { ... }`: on any `Throwable`, `intercept` returns
+```kotlin
+/** Our accessibility service (research R13). Only window-state events; never reads text or nodes. */
+class CalmAccessibilityService : android.accessibilityservice.AccessibilityService {
+    // onAccessibilityEvent: ForegroundFilter.accept(...) → repository:
+    //   ForegroundChanged(pkg) for any other app; LaunchRequested(key, decision, OUTSIDE) when pkg is tracked
+    // onServiceConnected / onUnbind: marks the toggle on/off for the health line and the pill rule
+}
+```
+
+All entry points wrap their body in `failOpen { ... }`: on any `Throwable`, `intercept` returns
 `false`, and the hooks do nothing except log.
 
 ## Upstream call sites (exact)
@@ -80,5 +109,15 @@ Both entry points wrap their body in `failOpen { ... }`: on any `Throwable`, `in
 RulesEngine.cooldownUntil(app, history, cooldownMin, now): Long?        // decide step 7 and state rebuild
 fun SessionState.session(): SessionState                                // the state behind an open prompt
 val SessionState.activeRecord: SessionRecord?                           // running or expired session, if any
-UnplannedOpens.find(resumes, trackedPkgs, sessions, now): List<Resume>  // T065, pure
+UnplannedOpens.find(resumes, trackedSince, sessions, now): List<Resume> // T065, pure; opens before tracking began do not count
+ExemptRules.whenTracking(kind: ExemptionKind?): TrackRequest           // T103; ExemptionKind = ALWAYS, DEFAULT, USER
+ExemptRules.trackedToDrop(tracked, exemptPkgs): List<AppKey>           // T103
+
+/** Pure (research R14, R15; T086). The accessibility service passes only strings, a flag and the time. */
+class ForegroundFilter(ownPkg: String, ignoredPkgs: Set<String>, ignoredClasses: Set<String>) {
+    /** The package newly in front, OWN for our own app, or IGNORE. */
+    fun accept(pkg: String?, className: String?, isActivity: Boolean, now: Long): Result
+    /** After an OUTSIDE prompt is cancelled: ignore outside opens of [pkg] for 3 s. */
+    fun noteCancelled(pkg: String, now: Long)
+}
 ```

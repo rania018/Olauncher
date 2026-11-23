@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- A session-length choice in "How long?": a soft accent chip -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="?attr/calmAccent">
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="24dp" />
+            <solid android:color="@color/calm_accent_soft" />
+        </shape>
+    </item>
+</ripple>

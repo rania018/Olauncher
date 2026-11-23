@@ -15,9 +15,10 @@ import app.calmlauncher.util.CalmLog
  *
  * UsageStatsManager keeps a history of usage events, such as "this app's screen came to the
  * front at this time". There is no callback when the foreground app changes, so we never poll:
- * we ask once, at the deadline, which app was resumed last, with one retry after 2 s because
- * events can arrive a few seconds late. Needs "Usage access", which upstream already uses for
- * its screen-time display. Only package names and times are read.
+ * we ask once, at the deadline, which app was resumed last since shortly before the session
+ * started, with one retry after 2 s because events can arrive a few seconds late. Needs "Usage
+ * access", which upstream already uses for its screen-time display. Only package names and times
+ * are read.
  */
 object ForegroundProbe {
 
@@ -38,7 +39,9 @@ object ForegroundProbe {
     private fun attempt(context: Context, rec: SessionRecord, retry: Boolean, onResult: (Result) -> Unit) {
         CalmGraph.loadThen({ _ ->
             val now = System.currentTimeMillis()
-            lastResumed(context, now - LOOKBACK_MS, now)
+            // Look back to the start of the session, not only 10 minutes: staying on one screen of
+            // the app logs no new event, and a long session or a long call would look like "unknown".
+            lastResumed(context, minOf(now, rec.startedAt) - LOOKBACK_MS, now)
         }) { last ->
             val result = when {
                 last == null -> Result.UNKNOWN

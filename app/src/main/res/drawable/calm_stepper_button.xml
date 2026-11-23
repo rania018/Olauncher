@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The round minus and plus buttons of a setting -->
+<ripple xmlns:android="http://schemas.android.com/apk/res/android"
+    android:color="@color/calm_accent_soft">
+    <item>
+        <shape android:shape="oval">
+            <stroke
+                android:width="1.5dp"
+                android:color="?attr/calmAccent" />
+        </shape>
+    </item>
+    <item android:id="@android:id/mask">
+        <shape android:shape="oval">
+            <solid android:color="#FFFFFFFF" />
+        </shape>
+    </item>
+</ripple>

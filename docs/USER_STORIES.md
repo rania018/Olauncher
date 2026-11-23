@@ -95,6 +95,7 @@ As a user, I want the timer to work even if Android kills the launcher.
 As a user, I want calls never to be interrupted by a timer.
 1. Given a session expires while a phone call or VoIP call is active (audio mode in-call or in-communication), when the deadline passes, then no time's-up screen appears until the call ends. It then appears within 5 s of the call ending, if I'm still in the tracked app.
 2. Given an incoming call during a session, when the dialer comes to the front, then nothing from the app covers the call screen.
+3. Given a call running in the background and the app-limits toggle on, when I use a tracked app, then the time-left reminder and the time's-up card apply as usual, and the call's sound is not touched (spec FR-018, updated 2026-11-23). Scenario 1 applies when the phone rings, the call screen is in front, or the toggle is off.
 
 ---
 

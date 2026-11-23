@@ -2,9 +2,12 @@ package app.calmlauncher.gate
 
 import android.content.Context
 import app.calmlauncher.CalmGraph
+import app.calmlauncher.engine.AllowReason
 import app.calmlauncher.engine.Decision
 import app.calmlauncher.util.Apps
+import app.calmlauncher.util.CalmLog
 import app.calmlauncher.util.failOpen
+import app.olauncher.BuildConfig
 import app.olauncher.data.AppModel
 
 /**
@@ -28,7 +31,14 @@ object LaunchGate {
 
             val key = Apps.keyOf(context, app.appPackage, app.user)
             val decision = repo.decide(key)
-            if (decision is Decision.Allow) return@failOpen false
+            if (decision is Decision.Allow) {
+                // Debug builds say in Logcat why a tracked app opened without a prompt, e.g. RUNNING
+                // (its session is still counting down, spec FR-008).
+                if (BuildConfig.DEBUG && decision.reason != AllowReason.NOT_TRACKED) {
+                    CalmLog.i("no prompt for ${key.pkg}: ${decision.reason}")
+                }
+                return@failOpen false
+            }
 
             AppLauncher.remember(
                 AppLauncher.Target(

@@ -89,6 +89,7 @@ class SessionService : Service() {
             receiver?.let { unregisterReceiver(it) }
             appsCallback?.let { getSystemService(LauncherApps::class.java).unregisterCallback(it) }
             CallGuard.stop(this)
+            TimeLeftOverlay.hide()
         }
         super.onDestroy()
     }
@@ -109,6 +110,7 @@ class SessionService : Service() {
         handler.removeCallbacksAndMessages(null)
         val state = repo.sessionState
         CallGuard.sync(this, state)
+        TimeLeftOverlay.sync(this, state, repo.timeLeftDisplay)
         val rec = state.activeRecord
         if (rec == null) {
             ServiceCompat.stopForeground(this, ServiceCompat.STOP_FOREGROUND_REMOVE)

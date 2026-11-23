@@ -2,7 +2,10 @@ package app.calmlauncher.enforce
 
 /** Whether drawing over the screen is allowed right now. [CallGuard] is the real implementation. */
 fun interface GuardState {
-    /** True while a call rings or is active, the lock screen is up, or the screen is off. */
+    /**
+     * True while a call rings, a call runs and the tracked app is not the app in front, the lock
+     * screen is up, or the screen is off (the engine's CallRule).
+     */
     fun isBlocked(): Boolean
 }
 
@@ -12,7 +15,8 @@ fun interface GuardState {
  *
  * Order matters: an exempt app is never covered (checked at show time, because the exempt list
  * can change during a session); an app whose enforcement is paused by the loop guard is left
- * alone; a call or the lock screen only delays the card.
+ * alone; a call (ringing, or running while another screen is in front) or the lock screen only
+ * delays the card.
  */
 object ShowGate {
     enum class Verdict { SHOW, DEFER, SKIP }
