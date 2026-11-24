@@ -2,6 +2,7 @@ package app.calmlauncher.data
 
 import app.calmlauncher.engine.AppKey
 import app.calmlauncher.engine.EndReason
+import app.calmlauncher.engine.ExemptionKind
 import app.calmlauncher.engine.SessionRecord
 import app.calmlauncher.engine.TrackedApp
 import org.junit.Assert.assertEquals
@@ -61,6 +62,19 @@ class MappersTest {
         assertEquals(ExemptSource.USER, c.textToSource("???"))
         assertEquals(null, c.textToCategory("???"))
         EndReason.entries.forEach { assertEquals(it, c.textToEndReason(c.endReasonToText(it))) }
+    }
+
+    /** T103: `exempt_app.category` and `exempt_app.source` become the engine's ExemptionKind. */
+    @Test
+    fun exemptRowsMapToTheEngineKinds() {
+        fun row(source: ExemptSource, category: ExemptCategory?) = ExemptAppEntity("p", source, category, 0)
+        assertEquals(null, Mappers.toExemptionKind(null))
+        // SYSTEM (dialer, SMS, Settings) wins whatever the source says.
+        assertEquals(ExemptionKind.ALWAYS, Mappers.toExemptionKind(row(ExemptSource.DEFAULT, ExemptCategory.SYSTEM)))
+        assertEquals(ExemptionKind.ALWAYS, Mappers.toExemptionKind(row(ExemptSource.USER, ExemptCategory.SYSTEM)))
+        assertEquals(ExemptionKind.DEFAULT, Mappers.toExemptionKind(row(ExemptSource.DEFAULT, null)))
+        assertEquals(ExemptionKind.USER, Mappers.toExemptionKind(row(ExemptSource.USER, ExemptCategory.MESSAGING)))
+        assertEquals(ExemptionKind.USER, Mappers.toExemptionKind(row(ExemptSource.USER, null)))
     }
 
     @Test

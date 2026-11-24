@@ -34,7 +34,8 @@ enum class EventType {
  *
  * Invariants (data-model.md `TrackedApp`): [presetsMin] is non-empty, sorted, distinct and every
  * value is in 1..60; [cooldownMin] is in 0..60, where 0 turns the cooldown off. The constructor
- * rejects anything else; use [of] to build one from untrusted input such as the database.
+ * rejects anything else; use [of] to build one from untrusted input such as the database. [of]
+ * also keeps at most [MAX_PRESETS] session lengths (spec FR-024).
  */
 data class TrackedApp(val key: AppKey, val presetsMin: List<Int>, val cooldownMin: Int) {
     init {
@@ -49,11 +50,18 @@ data class TrackedApp(val key: AppKey, val presetsMin: List<Int>, val cooldownMi
         const val DEFAULT_COOLDOWN_MIN = 10
         const val MAX_COOLDOWN_MIN = 60
 
-        /** Builds a valid [TrackedApp] from any input: drops bad presets, clamps the cooldown. */
+        /** The prompt offers at most this many session lengths (spec FR-024). */
+        const val MAX_PRESETS = 6
+
+        /**
+         * Builds a valid [TrackedApp] from any input: drops bad presets, keeps the [MAX_PRESETS]
+         * shortest, clamps the cooldown.
+         */
         fun of(key: AppKey, presetsMin: List<Int>, cooldownMin: Int): TrackedApp {
             val presets = presetsMin.filter { it in MIN_SESSION_MIN..MAX_SESSION_MIN }
                 .distinct()
                 .sorted()
+                .take(MAX_PRESETS)
                 .ifEmpty { DEFAULT_PRESETS }
             return TrackedApp(key, presets, cooldownMin.coerceIn(0, MAX_COOLDOWN_MIN))
         }

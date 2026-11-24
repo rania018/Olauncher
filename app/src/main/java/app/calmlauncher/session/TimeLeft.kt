@@ -20,6 +20,16 @@ object TimeLeft {
     private const val MINUTE_MS = 60_000L
     private const val SECOND_MS = 1_000L
 
+    /**
+     * Whether the reminder is on screen at all (research R17). [counting]: a session is counting
+     * down. [graceCheckAt]: the session's pending "left early" check, which is set exactly while
+     * the user is away from the session's app. With the app-limits toggle on ([accessibilityOn])
+     * the reminder therefore hides on the home screen and in other apps and comes back with the
+     * app. With the toggle off we cannot tell when the user is back, so it shows on every screen.
+     */
+    fun shouldShow(counting: Boolean, graceCheckAt: Long?, accessibilityOn: Boolean): Boolean =
+        counting && (!accessibilityOn || graceCheckAt == null)
+
     /** "4 min" while more than a minute is left (rounded up), then "0:42". */
     fun label(remainingMs: Long): String {
         val r = remainingMs.coerceAtLeast(0)

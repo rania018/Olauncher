@@ -209,6 +209,18 @@ Phase 0 output for [plan.md](plan.md). Background analysis lives in `docs/TECHNI
   one rule. Without the toggle, only the home screen starts the grace, and the end-of-grace check
   uses the usage history (spec FR-015).
 - **Alternatives**: pausing the clock while away (rejected by the owner in clarification).
+- **Implementation note (2026-11-23, T093/T094)**:
+  - The adapter rule is the pure `GraceCheck.trackedInFront(sessionPkg, accessibilityFront,
+    launcherResumed, usageFront)` in `:engine`, checked in that order: either source naming the
+    session's app → `true`; else the launcher still resumed → `false`; else any source naming
+    another app → `false`; else `null`.
+  - `LaunchGate` lets a running session's app through without the engine (`Allow(RUNNING)`, upstream
+    opens it), so it sends `ForegroundChanged(session pkg)` itself. Without that, and with the
+    toggle off, nothing would end the grace when the app is reopened from the launcher.
+  - The usage-history query at the end of the grace reaches back to the session start (as R6), so
+    a long stay on one screen cannot look like "unknown".
+  - Seen in the phone log of 2026-11-23: `LauncherPaused: Running -> Running [CancelSchedule]` when
+    WhatsApp was opened from the launcher, which is the bug this decision removes.
 
 ## R17. Showing the pill or bar only in the tracked app (FR-029)
 - **Decision**: `TimeLeftOverlay` shows the reminder when a session counts down **and** either the

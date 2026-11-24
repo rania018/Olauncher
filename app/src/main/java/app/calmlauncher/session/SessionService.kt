@@ -16,6 +16,8 @@ import androidx.core.app.ServiceCompat
 import androidx.core.content.ContextCompat
 import app.calmlauncher.CalmGraph
 import app.calmlauncher.CalmHooks
+import app.calmlauncher.access.AccessState
+import app.calmlauncher.engine.GraceCheck
 import app.calmlauncher.engine.SessionEvent
 import app.calmlauncher.engine.SessionRecord
 import app.calmlauncher.engine.Wake
@@ -138,25 +140,27 @@ class SessionService : Service() {
     }
 
     /**
-     * End of the "left early" grace period (research R9): still on the launcher means the session
-     * ends. With usage access we double-check that the session's app was not resumed since.
+     * End of the "left early" grace period (research R16): is the session's app in front again?
+     * Three sources answer: the app-limits service's last app in front (null while its toggle is
+     * off), whether our home screen is still in front, and, with usage access, the last app in the
+     * usage history. The engine's [GraceCheck] combines them; only a clear "no" ends the session.
      */
     private fun graceCheck() {
         val rec = repo.sessionState.activeRecord ?: return
-        if (!CalmHooks.launcherInFront) {
-            repo.dispatch(SessionEvent.GraceElapsed(stillOnLauncher = false))
-            return
-        }
+        val pkg = rec.key.pkg
         if (!PermissionStatus.usageAccess(this)) {
-            repo.dispatch(SessionEvent.GraceElapsed(stillOnLauncher = true))
+            val inFront = GraceCheck.trackedInFront(pkg, AccessState.inFront, CalmHooks.launcherInFront, usageFront = null)
+            repo.dispatch(SessionEvent.GraceElapsed(inFront))
             return
         }
         val app = applicationContext
         CalmGraph.loadThen({ _ ->
             val now = System.currentTimeMillis()
-            ForegroundProbe.lastResumed(app, now - 10 * 60_000L, now)
+            ForegroundProbe.lastResumed(app, ForegroundProbe.windowStart(rec, now), now)
         }) { last ->
-            repo.dispatch(SessionEvent.GraceElapsed(stillOnLauncher = last == null || last.pkg != rec.key.pkg))
+            // Read the live answers only now: the user may have come back while the query ran.
+            val inFront = GraceCheck.trackedInFront(pkg, AccessState.inFront, CalmHooks.launcherInFront, last?.pkg)
+            repo.dispatch(SessionEvent.GraceElapsed(inFront))
         }
     }
 

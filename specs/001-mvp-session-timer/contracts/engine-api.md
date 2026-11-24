@@ -41,7 +41,10 @@ enum class LaunchSource { LAUNCHER, OUTSIDE }
 sealed interface SessionEvent {
     data class LaunchRequested(val key: AppKey, val decision: Decision, val cooldownMin: Int,
                                val source: LaunchSource = LaunchSource.LAUNCHER) : SessionEvent
-    /** Accessibility only: [pkg] came to the front. Never our own package. */
+    /**
+     * [pkg] came to the front: seen by the accessibility service, or sent by `LaunchGate` when the
+     * launcher reopens the session's app (decision `Allow(RUNNING)`). Never our own package.
+     */
     data class ForegroundChanged(val pkg: String) : SessionEvent
     /** End of the grace: true = the session's app is in front, false = another app or the launcher, null = unknown. */
     data class GraceElapsed(val trackedInFront: Boolean?) : SessionEvent
@@ -65,14 +68,17 @@ Required invariants (each has a test):
 
 ```kotlin
 object LaunchGate {
-    /** Called from upstream MainViewModel.selectedApp(). true = we handled it (prompt shown), false = upstream launches. */
+    /**
+     * Called from upstream MainViewModel.selectedApp(). true = we handled it (prompt shown), false = upstream launches.
+     * On `Allow(RUNNING)` it also tells the engine `ForegroundChanged(session pkg)`, which ends a pending grace (R16).
+     */
     fun intercept(context: Context, app: app.olauncher.data.AppModel): Boolean
 }
 
 object CalmHooks {
     /** Called from upstream MainActivity.onResume(). Reconciles sessions, removes stray overlays, starts grace check, refreshes health line. */
     fun onLauncherResumed(activity: Activity)
-    /** Called from upstream MainActivity.onPause() — cancels the grace check. */
+    /** Called from upstream MainActivity.onPause(). Only records that the home screen left the front; a pending grace stays (R16, invariant 8). */
     fun onLauncherPaused(activity: Activity)
     /** Text for the home health line, or null when everything is fine. */
     fun healthLine(context: Context): String?
@@ -112,6 +118,10 @@ val SessionState.activeRecord: SessionRecord?                           // runni
 UnplannedOpens.find(resumes, trackedSince, sessions, now): List<Resume> // T065, pure; opens before tracking began do not count
 ExemptRules.whenTracking(kind: ExemptionKind?): TrackRequest           // T103; ExemptionKind = ALWAYS, DEFAULT, USER
 ExemptRules.trackedToDrop(tracked, exemptPkgs): List<AppKey>           // T103
+TrackedApp.MAX_PRESETS = 6; TrackedApp.of keeps the 6 shortest lengths  // T103
+GraceCheck.trackedInFront(sessionPkg, accessibilityFront, launcherResumed, usageFront): Boolean?
+                                                                        // T094, research R16: the value for GraceElapsed
+CallRule.blocks(call, locked, screenOff, trackedInFront): Boolean       // T105, research R7: Call = NONE, RINGING, ACTIVE
 
 /** Pure (research R14, R15; T086). The accessibility service passes only strings, a flag and the time. */
 class ForegroundFilter(ownPkg: String, ignoredPkgs: Set<String>, ignoredClasses: Set<String>) {

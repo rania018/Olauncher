@@ -37,6 +37,8 @@ object LaunchGate {
                 if (BuildConfig.DEBUG && decision.reason != AllowReason.NOT_TRACKED) {
                     CalmLog.i("no prompt for ${key.pkg}: ${decision.reason}")
                 }
+                // Reopening the session's app is coming back to it: a pending grace ends (research R16).
+                if (decision.reason == AllowReason.RUNNING) repo.onSessionAppReopened(key)
                 return@failOpen false
             }
 

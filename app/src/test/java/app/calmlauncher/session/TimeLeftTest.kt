@@ -79,6 +79,29 @@ class TimeLeftTest {
         assertEquals(null, TimeLeft.nextRefreshMs(Display.PILL, rec(), t0 + min(5)))
     }
 
+    // T096: the reminder shows only in the tracked app when the app-limits toggle is on (research R17).
+
+    @Test
+    fun nothingShowsWhenNoSessionCountsDown() {
+        assertEquals(false, TimeLeft.shouldShow(counting = false, graceCheckAt = null, accessibilityOn = true))
+        assertEquals(false, TimeLeft.shouldShow(counting = false, graceCheckAt = null, accessibilityOn = false))
+        assertEquals(false, TimeLeft.shouldShow(counting = false, graceCheckAt = t0, accessibilityOn = false))
+    }
+
+    @Test
+    fun withTheToggleOnTheReminderHidesWhileAwayFromTheApp() {
+        // A pending grace check means "on the home screen or in another app".
+        assertEquals(true, TimeLeft.shouldShow(counting = true, graceCheckAt = null, accessibilityOn = true))
+        assertEquals(false, TimeLeft.shouldShow(counting = true, graceCheckAt = t0 + min(2), accessibilityOn = true))
+    }
+
+    @Test
+    fun withTheToggleOffTheReminderShowsOnEveryScreen() {
+        // Without the toggle we cannot tell when the user is back, so it never hides.
+        assertEquals(true, TimeLeft.shouldShow(counting = true, graceCheckAt = null, accessibilityOn = false))
+        assertEquals(true, TimeLeft.shouldShow(counting = true, graceCheckAt = t0 + min(2), accessibilityOn = false))
+    }
+
     @Test
     fun unknownSettingFallsBackToThePill() {
         assertEquals(Display.PILL, Display.parse(null))

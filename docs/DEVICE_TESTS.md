@@ -10,11 +10,11 @@ Setup: [DEV_SETUP.md](DEV_SETUP.md) §6 (install, permissions, log filter).
 
 | Check | Command | Result | Date |
 |---|---|---|---|
-| Engine tests (state machine, rules, invariants 1–6) | `./gradlew :engine:test` | pass: 97 tests | 2026-11-21 |
-| App JVM tests + upstream tests | `./gradlew test` | pass: 31 Calm + 11 upstream tests | 2026-11-21 |
-| Debug build | `./gradlew assembleDebug` | pass | 2026-11-21 |
+| Engine tests (state machine, rules, invariants 1–10, call rule, leaving) | `./gradlew :engine:test` | pass: 155 tests | 2026-11-24 |
+| App JVM tests + upstream tests | `./gradlew test` | pass: 66 tests per build variant | 2026-11-24 |
+| Debug build | `./gradlew assembleDebug` | pass | 2026-11-24 |
 | Instrumented test APK compiles | `./gradlew assembleDebugAndroidTest` | pass | 2026-11-21 |
-| No network permission | `apkanalyzer manifest permissions app/build/outputs/apk/debug/app-debug.apk` | pass: no `INTERNET`, no `ACCESS_NETWORK_STATE` | 2026-11-21 |
+| No network permission | `apkanalyzer manifest permissions app/build/outputs/apk/debug/app-debug.apk` | pass: no `INTERNET`, no `ACCESS_NETWORK_STATE` | 2026-11-24 |
 | Room DAO test on the phone (T066) | `./gradlew connectedDebugAndroidTest` | not run yet | |
 
 ## 2. Platform assumptions to confirm first (T019, research R4/R5)
@@ -53,17 +53,35 @@ If (a) fails, stop and revisit research R5 with the owner. The fallback (HOME fr
 | 16 | Open a tracked app | Prompt shows the app icon; session lengths on one line as chips | US1, FR-024 | | |
 | 17 | Open Screen time limits | Grouped cards, steppers save at once, chips remove/add session lengths, app icons, tracked apps first, tap a tracked app → its own settings | FR-024 | | |
 | 18 | Accent colour: Pink, then Phone's colour; change One UI Color palette | Every Calm surface and the notifications use the colour at once; Phone's colour follows the palette; home text stays black/white | FR-030 | | |
+| 19 | Track Instagram; open it from the recent-apps list | Prompt over Instagram within 1 s; Cancel → home; choosing 2 min leaves Instagram where it was and starts the session | US1 sc. 6, FR-031, SC-008 | | |
+| 20 | Open a tracked app from a link in another app, and from one of its notifications; repeat during its cooldown | Prompt each time; during the cooldown, the cooldown screen instead | FR-031, FR-028 | | |
+| 21 | Start 5 min in Messenger; follow a link into another app and stay 2+ min | Messenger's session ends `LEFT_EARLY`; its pill and notification disappear | US6 sc. 4, FR-015 | | |
+| 22 | Start 5 min; go home, open an exempt app, stay 2+ min | Session ends `LEFT_EARLY` | US6 sc. 1 | | |
+| 23 | Start 5 min; switch to another app for 30 s and back; inside the tracked app open the keyboard and pull down the notification shade | Session continues; the pill hides while away and comes back; keyboard and shade do not hide the pill or start the grace | US6 sc. 2, FR-029 | | |
+| 24 | Turn the app-limits toggle off; repeat rows 19 and 22 | Recents open not prompted (logged as unplanned open); health line names it; pill shows on every screen; row 22 still ends the session after 2 min (usage history) | FR-031 fallback, FR-015 | | |
 | 25 | App-limits toggle on. Start a WhatsApp call, go home and open Instagram: choose 2 min. Stay in Instagram past the deadline with the call running. Then repeat and switch to the call screen before the deadline | Prompt as usual; pill visible over Instagram during the call; no warning sound; time's-up card at the deadline, the call's sound unchanged, "Go home" works. On the call screen: no pill, no card. With the toggle off: no pill or card until hang-up | US4 sc. 7, FR-018 | | |
 
-Rows 19–24 are in [quickstart §3](../specs/001-mvp-session-timer/quickstart.md) and are added here with task T102.
+### Rows 19–24 detail: the app-limits toggle (T091, T095, T098, T101)
+
+- Turn the toggle on first: **Settings → Accessibility → Installed apps → Calm Launcher app limits**, or the
+  "App limits" onboarding page. An install that already went through onboarding opens that page once.
+- SC-007 with the toggle on: an untracked app opened from the launcher and from Recents shows no visible delay.
+- Onboarding page "App limits": why, what is reduced, the button to Accessibility, a live On / Off status,
+  and the restricted-settings tip.
+- Row 23: watch the log while switching; the grace starts on `ForegroundChanged` and ends when the app is back.
+  ```sh
+  adb logcat -s CalmLauncher:* | grep -E "ForegroundChanged|GraceElapsed|LauncherResumed"
+  ```
 
 ### Row 25 detail: the 2026-11-23 run that led to it
 
 Before the fix, a tracked app used during a WhatsApp call showed no pill and no time's-up card until
 hang-up: every call hid them, whichever app was in front. In that run Instagram also opened from the
 launcher with **no prompt**. The launcher code skips the prompt for a tracked app only while its
-session is still running (FR-008), and with the pill hidden nothing showed that. This was not
-confirmed from a log; a debug build now logs the reason, so the next run can settle it:
+session is still running (FR-008), and with the pill hidden nothing showed that. The phone's own
+records fit this (no error event ever logged; Instagram sessions were running that evening; the
+log shows `InCallOrLocked` at an expiry during the call), but the minute of that open is not known.
+A debug build now logs the reason, so the next run can settle it:
 
 ```sh
 adb logcat -s CalmLauncher:* | grep "no prompt for"     # e.g. "no prompt for com.instagram.android: RUNNING"

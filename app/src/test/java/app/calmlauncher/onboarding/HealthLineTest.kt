@@ -10,7 +10,12 @@ import org.junit.Test
 class HealthLineTest {
 
     private val now = 1_700_000_000_000L
-    private val all = PermissionStatus(notifications = true, overlay = true, usageAccess = true, exactAlarms = true, battery = true)
+    private val all = PermissionStatus(
+        notifications = true, overlay = true, usageAccess = true, exactAlarms = true, battery = true, accessibility = true,
+    )
+    private val none = PermissionStatus(
+        notifications = false, overlay = false, usageAccess = false, exactAlarms = false, battery = false, accessibility = false,
+    )
 
     private fun pick(
         status: PermissionStatus = all,
@@ -32,6 +37,28 @@ class HealthLineTest {
         assertEquals(Item.BATTERY, pick(all.copy(battery = false)))
     }
 
+    /** T099: with the app-limits toggle off, only opens from this launcher are limited (FR-023, FR-031). */
+    @Test
+    fun theAppLimitsToggleBeingOffIsNamed() {
+        assertEquals(Item.ACCESSIBILITY, pick(all.copy(accessibility = false)))
+        assertEquals(OnboardingPage.ACCESSIBILITY, Item.ACCESSIBILITY.page)
+        assertEquals(false, all.copy(accessibility = false).isGranted(OnboardingPage.ACCESSIBILITY))
+        assertEquals(true, all.isGranted(OnboardingPage.ACCESSIBILITY))
+    }
+
+    @Test
+    fun theAppLimitsLineComesAfterTheOverlayLine() {
+        assertEquals(Item.OVERLAY, pick(all.copy(overlay = false, accessibility = false)))
+        assertEquals(Item.ACCESSIBILITY, pick(all.copy(accessibility = false, usageAccess = false, battery = false)))
+    }
+
+    @Test
+    fun theAppLimitsPageComesBeforeTheExemptApps() {
+        val pages = OnboardingPage.entries
+        assertEquals(pages.indexOf(OnboardingPage.BATTERY) + 1, pages.indexOf(OnboardingPage.ACCESSIBILITY))
+        assertEquals(OnboardingPage.EXEMPT_APPS, pages.last())
+    }
+
     @Test
     fun exactAlarmsAreOptionalAndNeverShown() {
         assertEquals(null, pick(all.copy(exactAlarms = false)))
@@ -39,14 +66,15 @@ class HealthLineTest {
 
     @Test
     fun onlyOneLineMostImportantFirst() {
-        val none = PermissionStatus(false, false, false, false, false)
         assertEquals(Item.NOTIFICATIONS, pick(none))
         assertEquals(Item.OVERLAY, pick(none.copy(notifications = true)))
+        assertEquals(Item.ACCESSIBILITY, pick(none.copy(notifications = true, overlay = true)))
+        assertEquals(Item.USAGE_ACCESS, pick(none.copy(notifications = true, overlay = true, accessibility = true)))
     }
 
     @Test
     fun permissionsDoNotNagBeforeAnythingIsTracked() {
-        assertEquals(null, pick(PermissionStatus(false, false, false, false, false), trackingInUse = false))
+        assertEquals(null, pick(none, trackingInUse = false))
     }
 
     @Test

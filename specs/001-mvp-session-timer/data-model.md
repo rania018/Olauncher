@@ -38,7 +38,7 @@ tables arrive with their phase through Room migrations.
 | Running / Warning | `EndedByUser` | | Idle | `EndSession(ENDED_BY_USER)`, `GoHome` |
 | Running / Warning | `LauncherResumed` | no grace pending | same, `leftAt = now` | `ScheduleAt(now + grace, GRACE)` |
 | Running / Warning | `ForegroundChanged(pkg)` | `pkg` ≠ session app, no grace pending | same, `leftAt = now` | `ScheduleAt(now + grace, GRACE)` |
-| Running / Warning | `ForegroundChanged(session pkg)` or `LaunchRequested(session key, Allow)` | grace pending | same, grace cleared | `CancelSchedule(GRACE)`; plus `LaunchApp` for a LAUNCHER request |
+| Running / Warning | `ForegroundChanged(session pkg)` (from the accessibility service, or from `LaunchGate` when the launcher reopens the session's app) or `LaunchRequested(session key, Allow)` | grace pending | same, grace cleared | `CancelSchedule(GRACE)`; plus `LaunchApp` for a LAUNCHER request |
 | Running / Warning | `LauncherPaused` | | unchanged | none (opening another app from the launcher is not coming back, R16) |
 | Running / Warning | `GraceElapsed(trackedInFront = false)` | grace due | Idle | `EndSession(LEFT_EARLY, leftAt)`, `StopCountdown` |
 | Running / Warning | `GraceElapsed(trackedInFront = true or null)` | grace due | same, grace cleared | none (back in the app, or unknown: keep going) |

@@ -570,7 +570,7 @@ class SessionMachineTest {
     @Test
     fun stayingHomeThroughTheGraceEndsAsLeftEarly() {
         val home = reduce(running(10), LauncherResumed, now = T0 + min(1)).state
-        val t = reduce(home, GraceElapsed(stillOnLauncher = true), now = T0 + min(3))
+        val t = reduce(home, GraceElapsed(trackedInFront = false), now = T0 + min(3))
         assertEquals(Idle, t.state)
         val end = t.effects.filterIsInstance<EndSession>().single()
         assertEquals(EndReason.LEFT_EARLY, end.reason)
@@ -581,12 +581,11 @@ class SessionMachineTest {
     }
 
     @Test
-    fun leavingTheLauncherCancelsTheGraceCheck() {
+    fun leavingTheLauncherKeepsTheGraceCheck() {
+        // Opening another app from the launcher is not coming back (research R16, invariant 8).
         val home = reduce(running(10), LauncherResumed, now = T0 + min(1)).state
-        val t = reduce(home, LauncherPaused, now = T0 + min(2))
-        assertEquals(running(10), t.state)
-        assertEquals(listOf(CancelSchedule(Wake.GRACE)), t.effects)
-        assertUnchanged(t.state, reduce(t.state, GraceElapsed(true), now = T0 + min(3)))
+        assertUnchanged(home, reduce(home, LauncherPaused, now = T0 + min(2)))
+        assertEquals(Idle, reduce(home, GraceElapsed(trackedInFront = false), now = T0 + min(3)).state)
     }
 
     @Test
@@ -600,15 +599,16 @@ class SessionMachineTest {
     @Test
     fun earlyOrUnexpectedGraceCallbacksAreIgnored() {
         val home = reduce(running(10), LauncherResumed, now = T0 + min(1)).state
-        assertUnchanged(home, reduce(home, GraceElapsed(true), now = T0 + min(2)))
+        assertUnchanged(home, reduce(home, GraceElapsed(trackedInFront = false), now = T0 + min(2)))
         val r = running(10)
-        assertUnchanged(r, reduce(r, GraceElapsed(true), now = T0 + min(5)))
+        assertUnchanged(r, reduce(r, GraceElapsed(trackedInFront = false), now = T0 + min(5)))
     }
 
     @Test
-    fun graceCallbackWhenNotOnTheLauncherClearsTheCheck() {
+    fun graceCallbackWhenBackInTheAppOrUnknownClearsTheCheck() {
         val home = reduce(running(10), LauncherResumed, now = T0 + min(1)).state
-        assertEquals(running(10), reduce(home, GraceElapsed(stillOnLauncher = false), now = T0 + min(3)).state)
+        assertEquals(running(10), reduce(home, GraceElapsed(trackedInFront = true), now = T0 + min(3)).state)
+        assertEquals(running(10), reduce(home, GraceElapsed(trackedInFront = null), now = T0 + min(3)).state)
     }
 
     @Test

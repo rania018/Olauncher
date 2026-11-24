@@ -30,8 +30,9 @@ sealed interface SessionState {
     }
 
     /**
-     * A session is counting down. [graceCheckAt] is set while the user is back on the launcher
-     * (US6): if they are still there at that time, the session ends as LEFT_EARLY.
+     * A session is counting down. [graceCheckAt] is set while the user is away from the session's
+     * app, on the home screen or in another app (US6, research R16): if they are still away at
+     * that time, the session ends as LEFT_EARLY.
      */
     data class Running(
         val rec: SessionRecord,
@@ -141,12 +142,26 @@ sealed interface SessionEvent {
     /** The override wait finished. */
     data object OverrideCompleted : SessionEvent
 
-    /** The launcher came to the front / left the front. */
+    /**
+     * The launcher came to the front / left the front. Leaving the launcher changes nothing by
+     * itself: opening another app from it is not coming back to the session's app (research R16).
+     */
     data object LauncherResumed : SessionEvent
     data object LauncherPaused : SessionEvent
 
-    /** The grace period after going home ended; [stillOnLauncher] says whether the user stayed there. */
-    data class GraceElapsed(val stillOnLauncher: Boolean) : SessionEvent
+    /**
+     * [pkg] came to the front, as seen by the app-limits accessibility service, or because the
+     * launcher is reopening the session's app. Never our own package: the launcher reports itself
+     * with [LauncherResumed]. Window events carry no user profile, so only the package counts.
+     */
+    data class ForegroundChanged(val pkg: String) : SessionEvent
+
+    /**
+     * The grace period after leaving the session's app ended. [trackedInFront]: true = the
+     * session's app is in front again, false = the home screen or another app is, null = it cannot
+     * be told. Only false ends the session (contracts/engine-api invariant 9).
+     */
+    data class GraceElapsed(val trackedInFront: Boolean?) : SessionEvent
 
     /**
      * Re-check the persisted session against the clock: after boot, process restart, launcher

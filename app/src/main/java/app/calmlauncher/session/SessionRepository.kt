@@ -19,6 +19,7 @@ import app.calmlauncher.engine.Decision
 import app.calmlauncher.engine.Effect
 import app.calmlauncher.engine.EndReason
 import app.calmlauncher.engine.EventType
+import app.calmlauncher.engine.ExemptRules
 import app.calmlauncher.engine.Exemptions
 import app.calmlauncher.engine.LaunchSource
 import app.calmlauncher.engine.RulesEngine
@@ -32,7 +33,6 @@ import app.calmlauncher.engine.Wake
 import app.calmlauncher.engine.session
 import app.calmlauncher.enforce.ForegroundProbe
 import app.calmlauncher.exempt.DefaultExemptions
-import app.calmlauncher.exempt.ExemptRules
 import app.calmlauncher.onboarding.HealthLine
 import app.calmlauncher.onboarding.PermissionStatus
 import app.calmlauncher.util.Apps
@@ -209,16 +209,28 @@ class SessionRepository(context: Context, private val db: CalmDatabase, private 
 
     /**
      * The app-limits service saw [pkg] come to the front without our launcher: from the recent-apps
-     * list, a link or a notification (spec FR-031, research R15). A tracked app gets the same
-     * decision as a launcher open; the engine never relaunches it (it is already on screen).
+     * list, a link or a notification (spec FR-031, research R15). First the running session hears
+     * about it: another app starts the "left early" grace, its own app ends it (research R16).
+     * Then a tracked app gets the same decision as a launcher open; the engine never relaunches it
+     * (it is already on screen).
      */
     fun onAppInFront(pkg: String) {
         whenLoaded {
             failOpen("SessionRepository.onAppInFront") {
+                dispatch(SessionEvent.ForegroundChanged(pkg))
                 val key = trackedKeyFor(pkg) ?: return@failOpen
                 dispatch(SessionEvent.LaunchRequested(key, decide(key), cooldownMinFor(key), LaunchSource.OUTSIDE))
             }
         }
+    }
+
+    /**
+     * The launcher is reopening [key] while its session runs (no prompt, spec FR-008). That is
+     * coming back to the session's app, so a pending grace ends (research R16). Upstream opens the
+     * app itself; nothing is launched from here.
+     */
+    fun onSessionAppReopened(key: AppKey) {
+        failOpen("SessionRepository.onSessionAppReopened") { dispatch(SessionEvent.ForegroundChanged(key.pkg)) }
     }
 
     /**
@@ -345,7 +357,7 @@ class SessionRepository(context: Context, private val db: CalmDatabase, private 
      * only removed once [confirmed]; the user's own exemption is swapped for tracking.
      */
     fun requestTrack(key: AppKey, confirmed: Boolean = false): ExemptRules.TrackRequest {
-        val request = ExemptRules.whenTracking(exemptRows[key.pkg])
+        val request = ExemptRules.whenTracking(Mappers.toExemptionKind(exemptRows[key.pkg]))
         when (request) {
             ExemptRules.TrackRequest.TRACK -> track(key)
             ExemptRules.TrackRequest.REMOVE_EXEMPTION_THEN_TRACK -> if (removeExempt(key.pkg)) track(key)

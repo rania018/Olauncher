@@ -124,6 +124,16 @@ Onboarding links to each screen. For quick test setups the same can be done over
 | Usage access | onboarding page 3 | `adb shell appops set app.calmlauncher.debug GET_USAGE_STATS allow` |
 | Alarms & reminders (optional) | onboarding page 4 | `adb shell appops set app.calmlauncher.debug SCHEDULE_EXACT_ALARM allow` |
 | Battery unrestricted | onboarding page 5, plus One UI *Battery → Unrestricted* and off the *Sleeping apps* lists | `adb shell dumpsys deviceidle whitelist +app.calmlauncher.debug` |
+| App limits (accessibility toggle) | onboarding page 6, or **Settings → Accessibility → Installed apps → Calm Launcher app limits** | `adb shell settings put secure enabled_accessibility_services app.calmlauncher.debug/app.calmlauncher.access.CalmAccessibilityService` then `adb shell settings put secure accessibility_enabled 1` (⚠️ this replaces the list: any other enabled accessibility service, such as double-tap-to-lock, is switched off; append with `:` to keep it) |
+
+**App limits and "Restricted setting" (Android 13+).** The toggle is Calm Launcher's own accessibility
+service (`CalmAccessibilityService`, separate from upstream's double-tap-to-lock service). It tells the
+app which app is in front, so opens from Recents, links and notifications are prompted, sessions end
+when you leave the app, and the pill shows only in the tracked app. If the switch is greyed out with
+"Restricted setting": **Settings → Apps → Calm Launcher → ⋮ (top-right) → Allow restricted settings**,
+then switch it on again. `adb install` did not trigger the restriction on the Samsung (research R13);
+installing the APK from Files does. 🅢 One UI may switch the service off after a force stop or a crash;
+the home health line then reads "Limits only from this launcher: app limits are off in Accessibility".
 
 Revoke one (for example `... SYSTEM_ALERT_WINDOW deny`) to check the fallback and the home health line.
 

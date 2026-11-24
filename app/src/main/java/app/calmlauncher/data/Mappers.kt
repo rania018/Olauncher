@@ -1,6 +1,7 @@
 package app.calmlauncher.data
 
 import app.calmlauncher.engine.AppKey
+import app.calmlauncher.engine.ExemptionKind
 import app.calmlauncher.engine.SessionRecord
 import app.calmlauncher.engine.TrackedApp
 
@@ -24,6 +25,17 @@ object Mappers {
             cooldownMin = app.cooldownMin,
             createdAt = createdAt,
         )
+
+    /**
+     * How [row] is exempt, for the engine's track/exempt rule (data-model.md `exempt_app.category`
+     * and `exempt_app.source`): SYSTEM is always exempt; otherwise the source decides. null = not exempt.
+     */
+    fun toExemptionKind(row: ExemptAppEntity?): ExemptionKind? = when {
+        row == null -> null
+        row.category == ExemptCategory.SYSTEM -> ExemptionKind.ALWAYS
+        row.source == ExemptSource.DEFAULT -> ExemptionKind.DEFAULT
+        else -> ExemptionKind.USER
+    }
 
     fun toRecord(e: SessionEntity): SessionRecord =
         SessionRecord(

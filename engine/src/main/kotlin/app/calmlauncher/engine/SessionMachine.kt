@@ -27,6 +27,7 @@ import app.calmlauncher.engine.SessionEvent.DurationChosen
 import app.calmlauncher.engine.SessionEvent.EndedByUser
 import app.calmlauncher.engine.SessionEvent.ExtendStarted
 import app.calmlauncher.engine.SessionEvent.Extended
+import app.calmlauncher.engine.SessionEvent.ForegroundChanged
 import app.calmlauncher.engine.SessionEvent.ForegroundIsOther
 import app.calmlauncher.engine.SessionEvent.ForegroundIsTracked
 import app.calmlauncher.engine.SessionEvent.ForegroundUnknown
@@ -94,8 +95,11 @@ object SessionMachine {
             OverrideReset -> overrideReset(state)
             OverrideCompleted -> overrideCompleted(state, now, cfg)
             LauncherResumed -> launcherResumed(state, now, cfg)
-            LauncherPaused -> launcherPaused(state)
-            is GraceElapsed -> graceElapsed(state, event.stillOnLauncher, now)
+            // Opening another app from the launcher is not coming back to the session's app, so a
+            // pending grace stays (research R16, invariant 8).
+            LauncherPaused -> Transition(state)
+            is ForegroundChanged -> foregroundChanged(state, event.pkg, now, cfg)
+            is GraceElapsed -> graceElapsed(state, event.trackedInFront, now)
             is Reconcile -> reconcile(state, event.bootedAt, now, cfg)
             is AppUninstalled -> appUninstalled(state, event.key, now)
         }
@@ -353,15 +357,8 @@ object SessionMachine {
     // ------------------------------------------------------------------------- leaving early (US6)
 
     private fun launcherResumed(state: SessionState, now: Long, cfg: Config): Transition = when (state) {
-        is Running -> if (state.graceCheckAt != null) Transition(state) else {
-            val at = now + cfg.graceSec * SECOND_MS
-            Transition(state.copy(rec = state.rec.copy(leftAt = now), graceCheckAt = at), listOf(ScheduleAt(at, Wake.GRACE)))
-        }
-
-        is Warning -> if (state.graceCheckAt != null) Transition(state) else {
-            val at = now + cfg.graceSec * SECOND_MS
-            Transition(state.copy(rec = state.rec.copy(leftAt = now), graceCheckAt = at), listOf(ScheduleAt(at, Wake.GRACE)))
-        }
+        is Running -> startGrace(state, now, cfg)
+        is Warning -> startGrace(state, now, cfg)
 
         // Home was pressed while the card was up (or before it could be shown).
         is Expired -> endExpired(
@@ -380,10 +377,27 @@ object SessionMachine {
         else -> Transition(state)
     }
 
-    private fun launcherPaused(state: SessionState): Transition = when (state) {
-        is Running -> if (state.graceCheckAt == null) Transition(state) else clearGrace(state)
-        is Warning -> if (state.graceCheckAt == null) Transition(state) else clearGrace(state)
+    /**
+     * The accessibility service saw [pkg] come to the front. Another app than the session's starts
+     * the grace, exactly like going home; the session's own app ends it (research R16).
+     */
+    private fun foregroundChanged(state: SessionState, pkg: String, now: Long, cfg: Config): Transition = when (state) {
+        is Running -> if (pkg == state.rec.key.pkg) clearGrace(state) else startGrace(state, now, cfg)
+        is Warning -> if (pkg == state.rec.key.pkg) clearGrace(state) else startGrace(state, now, cfg)
         else -> Transition(state)
+    }
+
+    /** The user is away from the session's app: the grace starts, unless one is already pending. */
+    private fun startGrace(state: Running, now: Long, cfg: Config): Transition {
+        if (state.graceCheckAt != null) return Transition(state)
+        val at = now + cfg.graceSec * SECOND_MS
+        return Transition(state.copy(rec = state.rec.copy(leftAt = now), graceCheckAt = at), listOf(ScheduleAt(at, Wake.GRACE)))
+    }
+
+    private fun startGrace(state: Warning, now: Long, cfg: Config): Transition {
+        if (state.graceCheckAt != null) return Transition(state)
+        val at = now + cfg.graceSec * SECOND_MS
+        return Transition(state.copy(rec = state.rec.copy(leftAt = now), graceCheckAt = at), listOf(ScheduleAt(at, Wake.GRACE)))
     }
 
     private fun clearGrace(state: Running): Transition =
@@ -394,14 +408,19 @@ object SessionMachine {
         if (state.graceCheckAt == null) Transition(state)
         else Transition(state.copy(rec = state.rec.copy(leftAt = null), graceCheckAt = null), listOf(CancelSchedule(Wake.GRACE)))
 
-    private fun graceElapsed(state: SessionState, stillOnLauncher: Boolean, now: Long): Transition {
+    /**
+     * End of the grace. Only a clear "the session's app is not in front" ends the session; back in
+     * the app (true) or unknown (null) keeps it running, so nothing is ever ended on a guess
+     * (invariant 9).
+     */
+    private fun graceElapsed(state: SessionState, trackedInFront: Boolean?, now: Long): Transition {
         val (rec, checkAt) = when (state) {
             is Running -> state.rec to state.graceCheckAt
             is Warning -> state.rec to state.graceCheckAt
             else -> return Transition(state)
         }
         if (checkAt == null || now < checkAt) return Transition(state)
-        if (!stillOnLauncher) {
+        if (trackedInFront != false) {
             return when (state) {
                 is Running -> Transition(state.copy(rec = rec.copy(leftAt = null), graceCheckAt = null))
                 is Warning -> Transition(state.copy(rec = rec.copy(leftAt = null), graceCheckAt = null))

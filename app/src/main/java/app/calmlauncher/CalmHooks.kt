@@ -11,6 +11,7 @@ import app.calmlauncher.enforce.Enforcer
 import app.calmlauncher.enforce.OverlayController
 import app.calmlauncher.onboarding.HealthLine
 import app.calmlauncher.onboarding.OnboardingActivity
+import app.calmlauncher.onboarding.OnboardingPage
 import app.calmlauncher.onboarding.PermissionStatus
 import app.calmlauncher.util.Apps
 import app.calmlauncher.util.failOpen
@@ -50,7 +51,11 @@ object CalmHooks {
         }
     }
 
-    /** Called from upstream MainActivity.onPause(): cancels the "left early" grace check. */
+    /**
+     * Called from upstream MainActivity.onPause(). It only records that the home screen is no
+     * longer in front: a pending "left early" grace stays, because opening another app from the
+     * launcher is not coming back to the session's app (research R16).
+     */
     fun onLauncherPaused(activity: Activity) = failOpen("CalmHooks.onLauncherPaused") {
         CalmGraph.init(activity)
         launcherInFront = false
@@ -109,10 +114,12 @@ object CalmHooks {
     /** Onboarding opens once, after Calm Launcher has been made the Home app (avoids the chooser). */
     private fun maybeStartOnboarding(activity: Activity) {
         val repo = CalmGraph.repository
-        if (repo.settings.onboardingVersion >= SettingsStore.ONBOARDING_CURRENT) return
+        val seen = repo.settings.onboardingVersion
+        if (seen >= SettingsStore.ONBOARDING_CURRENT) return
         if (!isOlauncherDefault(activity)) return
         repo.markOnboardingShown()
-        OnboardingActivity.open(activity, null)
+        // An install that already went through onboarding opens at the page added since: "App limits".
+        OnboardingActivity.open(activity, if (seen >= 1) OnboardingPage.ACCESSIBILITY else null)
     }
 
     /** No network wallpaper (Constitution I): cancel upstream's worker once per process. */

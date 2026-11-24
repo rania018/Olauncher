@@ -139,6 +139,8 @@
     <string name="calm_onb_allowed">✓ Allowed</string>
     <string name="calm_onb_not_allowed">✗ Not allowed</string>
     <string name="calm_onb_not_needed">✓ Not needed on this Android version</string>
+    <string name="calm_onb_on">✓ On</string>
+    <string name="calm_onb_off">✗ Off</string>
 
     <string name="calm_onb_notifications_title">Notifications</string>
     <string name="calm_onb_notifications_why">Shows a silent countdown while a session runs, one warning before it ends, and “End now”.</string>
@@ -159,6 +161,10 @@
     <string name="calm_onb_battery_title">Battery: Unrestricted</string>
     <string name="calm_onb_battery_why">Keeps the session timer alive. On Samsung also set Settings → Apps → Calm Launcher → Battery → Unrestricted, and keep the app off the Sleeping apps lists.</string>
     <string name="calm_onb_battery_reduced">Without it: the phone may stop the timer; sessions are then closed late, and the home screen says so.</string>
+
+    <string name="calm_onb_access_title">App limits</string>
+    <string name="calm_onb_access_why">Lets Calm Launcher see which app comes to the front. A tracked app opened from the recent-apps list, a link or a notification then asks “How long?” too, a session ends when you leave its app, and the time left shows only in that app. It only learns the name of the app in front, never what is on screen.</string>
+    <string name="calm_onb_access_reduced">Without it: limits apply only to apps opened from this launcher, and the time left shows on every screen. To turn it on, open Accessibility → Installed apps → Calm Launcher app limits. If Android says “Restricted setting”, open Settings → Apps → Calm Launcher → ⋮ → Allow restricted settings, then try again.</string>
 
     <string name="calm_onb_exempt_title">Apps that are never limited</string>
     <string name="calm_onb_exempt_why">Phone, messages, maps, camera, clock and Settings are already exempt. These apps were found on your phone; keep ticked the ones that must always open straight away.</string>

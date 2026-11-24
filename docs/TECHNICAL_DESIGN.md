@@ -95,7 +95,9 @@ app/src/main/java/app/calmlauncher/    our Android code
   settings/ScreenTimeSettingsActivity.kt
   onboarding/OnboardingActivity.kt, PermissionStatus.kt
   health/HealthMonitor.kt
-  access/FocusAccessibilityService.kt      (P2)
+  access/CalmAccessibilityService.kt, AccessState.kt   our own "app limits" accessibility service (spec FR-031):
+                                           window-state events only, no screen content; config in
+                                           res/xml/calm_accessibility_config.xml (our file, not upstream's)
   filter/AccessibilityNodeMapper.kt        (P3) AccessibilityNodeInfo -> engine NodeSnapshot
 app/src/main/res/                         our layouts and strings prefixed calm_ (calm_prompt.xml, ...)
 ```
@@ -114,7 +116,7 @@ Decisions:
 | `build.gradle` (root) | MVP | add KSP plugin classpath (for Room) |
 | `gradle/libs.versions.toml` | MVP | add room, datastore, ksp, androidx test runner / ext-junit versions |
 | `app/build.gradle` | MVP | `applicationId "app.calmlauncher"`, `implementation project(':engine')`, Room/DataStore deps, `apply plugin: 'com.google.devtools.ksp'`, `ksp { room.schemaLocation }`, androidTest deps |
-| `app/src/main/AndroidManifest.xml` | MVP | remove `INTERNET` and (merged) `ACCESS_NETWORK_STATE`; `android:label="@string/calm_app_name"` on the application and on upstream's accessibility service; add our permissions, activities, service, receivers |
+| `app/src/main/AndroidManifest.xml` | MVP | remove `INTERNET` and (merged) `ACCESS_NETWORK_STATE`; `android:label="@string/calm_app_name"` on the application and on upstream's accessibility service; add our permissions, activities, services (the session timer, and `app.calmlauncher.access.CalmAccessibilityService` with `BIND_ACCESSIBILITY_SERVICE`, not exported, meta-data `@xml/calm_accessibility_config`), receivers. Upstream's `MyAccessibilityService` entry and its config are not touched |
 | `app/src/main/res/xml/accessibility_service_config.xml` | MVP | `packageNames` → `app.calmlauncher.debug, app.calmlauncher` (keeps double-tap-to-lock working) |
 | `app/src/main/java/app/olauncher/MainViewModel.kt` | MVP | in `selectedApp()`, the two launch branches call `LaunchGate.intercept(...)` first (2 lines + import) |
 | `app/src/main/java/app/olauncher/MainActivity.kt` | MVP | `onResume()`: `CalmHooks.onLauncherResumed(this)` (1 line); new `onPause()` override calling `CalmHooks.onLauncherPaused(this)`; the two `setWallpaperWorker()` calls (L192–194, L222) commented out; `checkForMessages()` returns at once, so upstream's wallpaper, rating, sharing and Pro dialogs never show (FR-002). The already-scheduled wallpaper worker is cancelled from our `CalmHooks`, not here |

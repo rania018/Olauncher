@@ -31,8 +31,8 @@ import app.calmlauncher.data.ExemptSource
 import app.calmlauncher.data.Mappers
 import app.calmlauncher.data.SettingsStore
 import app.calmlauncher.engine.AppKey
+import app.calmlauncher.engine.ExemptRules
 import app.calmlauncher.engine.TrackedApp
-import app.calmlauncher.exempt.ExemptRules
 import app.calmlauncher.onboarding.OnboardingActivity
 import app.calmlauncher.onboarding.PermissionStatus
 import app.calmlauncher.session.TimeLeft
@@ -107,7 +107,8 @@ class ScreenTimeSettingsActivity : CalmActivity() {
 
     private fun showPermissionStatus() {
         val p = PermissionStatus.read(this)
-        val missing = listOf(p.notifications, p.overlay, p.usageAccess, p.exactAlarms, p.battery).count { !it }
+        // The app-limits accessibility toggle counts too: without it only launcher opens are limited.
+        val missing = listOf(p.notifications, p.overlay, p.usageAccess, p.exactAlarms, p.battery, p.accessibility).count { !it }
         header.calmPermissionsStatus.text = if (missing == 0) {
             getString(R.string.calm_settings_permissions_ok)
         } else {

@@ -90,7 +90,11 @@ class SettingsStore(context: Context) {
 
     companion object {
         const val FILE_NAME = "calm_settings"
-        const val ONBOARDING_CURRENT = 1
+        /**
+         * Raised whenever onboarding gains a page, so installs that already went through it see the
+         * new page once. 2 = the "App limits" accessibility page (2026-11-23).
+         */
+        const val ONBOARDING_CURRENT = 2
 
         fun encodeNotice(notice: HealthNotice): String = "${notice.code}|${notice.at}"
 

@@ -27,8 +27,9 @@ import app.olauncher.databinding.CalmOnboardingBinding
 /**
  * Explains each permission on its own page: why it is needed, what is reduced without it, a
  * button to the exact setting, and a live ✓/✗ refreshed when the user comes back (spec FR-022).
- * Every page can be skipped; nothing here blocks the launcher. The last page suggests apps that
- * should never be limited (spec FR-017). Re-openable from Screen time limits and the health line.
+ * Every page can be skipped; nothing here blocks the launcher. The "App limits" page is about our
+ * accessibility toggle (research R13). The last page suggests apps that should never be limited
+ * (spec FR-017). Re-openable from Screen time limits and the health line.
  */
 class OnboardingActivity : CalmActivity() {
 
@@ -84,12 +85,14 @@ class OnboardingActivity : CalmActivity() {
 
         val granted = status.isGranted(page)
         val notNeeded = page == OnboardingPage.EXACT_ALARMS && Build.VERSION.SDK_INT < Build.VERSION_CODES.S
+        // The app-limits page is about a switch, not a permission, so it reads "On" / "Off".
+        val isToggle = page == OnboardingPage.ACCESSIBILITY
         b.onbStatus.isVisible = granted != null
         b.onbStatus.text = getString(
             when {
                 notNeeded -> R.string.calm_onb_not_needed
-                granted == true -> R.string.calm_onb_allowed
-                else -> R.string.calm_onb_not_allowed
+                granted == true -> if (isToggle) R.string.calm_onb_on else R.string.calm_onb_allowed
+                else -> if (isToggle) R.string.calm_onb_off else R.string.calm_onb_not_allowed
             },
         )
         b.onbOpen.isVisible = granted == false && !notNeeded
@@ -103,6 +106,7 @@ class OnboardingActivity : CalmActivity() {
         OnboardingPage.USAGE_ACCESS -> Triple(R.string.calm_onb_usage_title, R.string.calm_onb_usage_why, R.string.calm_onb_usage_reduced)
         OnboardingPage.EXACT_ALARMS -> Triple(R.string.calm_onb_alarms_title, R.string.calm_onb_alarms_why, R.string.calm_onb_alarms_reduced)
         OnboardingPage.BATTERY -> Triple(R.string.calm_onb_battery_title, R.string.calm_onb_battery_why, R.string.calm_onb_battery_reduced)
+        OnboardingPage.ACCESSIBILITY -> Triple(R.string.calm_onb_access_title, R.string.calm_onb_access_why, R.string.calm_onb_access_reduced)
         OnboardingPage.EXEMPT_APPS -> Triple(R.string.calm_onb_exempt_title, R.string.calm_onb_exempt_why, R.string.calm_onb_exempt_reduced)
     }
 
@@ -158,6 +162,9 @@ class OnboardingActivity : CalmActivity() {
             }
 
             OnboardingPage.BATTERY -> openBatterySetting(pkgUri)
+            // The list of accessibility services; the user switches "Calm Launcher app limits" on there.
+            // ⚠️ Android 13+ may show "Restricted setting" for an app installed from a file; the page text says how to allow it.
+            OnboardingPage.ACCESSIBILITY -> open(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
             OnboardingPage.EXEMPT_APPS -> Unit
         }
     }

@@ -25,6 +25,7 @@ import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContextCompat
+import app.calmlauncher.access.AccessState
 import app.calmlauncher.engine.SessionRecord
 import app.calmlauncher.engine.SessionState
 import app.calmlauncher.engine.session
@@ -53,7 +54,8 @@ import kotlin.math.roundToInt
  * so it can be fully opaque.
  *
  * It is shown only while a session counts down: not with the time's-up card, not on the lock
- * screen, and not over a call. A ringing call always hides it; a running call hides it unless the
+ * screen, and not over a call. With the app-limits toggle on it also hides while the user is away
+ * from the tracked app, on the home screen or in another app (TimeLeft.shouldShow, research R17). A ringing call always hides it; a running call hides it unless the
  * tracked app itself is in front (CallGuard; an audio-mode listener on Android 12+ and the
  * app-limits service tell us at once when that changes). It is redrawn only when its text or
  * length changes (TimeLeft.nextRefreshMs), never every frame.
@@ -84,12 +86,27 @@ object TimeLeftOverlay {
         val app = context.applicationContext
         appContext = app
         val session = state.session()
-        val counting = when (session) {
-            is SessionState.Running -> session.rec
-            is SessionState.Warning -> session.rec
-            else -> null // idle, prompt, cooldown, or the time's-up card is up
+        val counting: SessionRecord?
+        val graceCheckAt: Long?
+        when (session) {
+            is SessionState.Running -> {
+                counting = session.rec
+                graceCheckAt = session.graceCheckAt
+            }
+
+            is SessionState.Warning -> {
+                counting = session.rec
+                graceCheckAt = session.graceCheckAt
+            }
+
+            else -> { // idle, prompt, cooldown, or the time's-up card is up
+                counting = null
+                graceCheckAt = null
+            }
         }
-        val wanted = display.takeIf { counting != null && it != TimeLeft.Display.OFF && Settings.canDrawOverlays(app) }
+        // With the app-limits toggle on, the reminder shows only in the tracked app (research R17).
+        val show = TimeLeft.shouldShow(counting != null, graceCheckAt, AccessState.connected)
+        val wanted = display.takeIf { show && it != TimeLeft.Display.OFF && Settings.canDrawOverlays(app) }
         if (wanted == null) {
             hide()
             return@failOpen
@@ -98,9 +115,8 @@ object TimeLeftOverlay {
             hide()
             show(app, wanted)
         }
-        val nowWarning = session is SessionState.Warning
-        if (nowWarning && !warning) pulse()
-        warning = nowWarning
+        // The switch to amber is the only cue at the warning: no custom animation (Constitution IV).
+        warning = session is SessionState.Warning
         rec = counting
         watchCalls(app)
         refresh()
@@ -236,15 +252,6 @@ object TimeLeftOverlay {
         } finally {
             a.recycle()
         }
-    }
-
-    /** A short grow-and-settle when the warning starts, so the colour change is noticed. */
-    private fun pulse() {
-        val view = (pill?.parent as? View) ?: return
-        view.animate().cancel()
-        view.animate().scaleX(1.15f).scaleY(1.15f).setDuration(180).withEndAction {
-            view.animate().scaleX(1f).scaleY(1f).setDuration(220).start()
-        }.start()
     }
 
     /** Redraws the text, ring or length and the colours, then waits until the next visible change. */

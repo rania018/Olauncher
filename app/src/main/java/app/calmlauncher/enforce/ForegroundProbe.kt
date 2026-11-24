@@ -39,9 +39,7 @@ object ForegroundProbe {
     private fun attempt(context: Context, rec: SessionRecord, retry: Boolean, onResult: (Result) -> Unit) {
         CalmGraph.loadThen({ _ ->
             val now = System.currentTimeMillis()
-            // Look back to the start of the session, not only 10 minutes: staying on one screen of
-            // the app logs no new event, and a long session or a long call would look like "unknown".
-            lastResumed(context, minOf(now, rec.startedAt) - LOOKBACK_MS, now)
+            lastResumed(context, windowStart(rec, now), now)
         }) { last ->
             val result = when {
                 last == null -> Result.UNKNOWN
@@ -57,6 +55,13 @@ object ForegroundProbe {
             }
         }
     }
+
+    /**
+     * Where a usage-history query for [rec] starts: shortly before the session began, not only
+     * 10 minutes ago. Staying on one screen of the app logs no new event, so a long session or a
+     * long call would otherwise look like "unknown".
+     */
+    fun windowStart(rec: SessionRecord, now: Long): Long = minOf(now, rec.startedAt) - LOOKBACK_MS
 
     /** Blocking (background thread): the last app that came to the front between [from] and [to]. */
     fun lastResumed(context: Context, from: Long, to: Long): Resume? = resumedEvents(context, from, to).lastOrNull()
